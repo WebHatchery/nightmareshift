@@ -5,14 +5,17 @@ use macroquad::prelude::*;
 use crate::data::GameData;
 use crate::state::GameState;
 use crate::ui::{
-    colors, draw_glass_button, draw_glass_panel, draw_noir_city_background, draw_wrapped_text,
-    fonts, spacing, UiAction, UiRect,
+    colors, draw_glass_button, draw_glass_panel, draw_noir_city_background, draw_small_caps,
+    draw_wrapped_text, fonts, spacing, UiAction, UiRect,
 };
 use crate::ui::{draw_ui_text, measure_ui_text};
 
 /// Draw the game over screen
 pub fn draw_game_over(game_state: &GameState, game_data: Option<&GameData>) -> UiAction {
     draw_noir_city_background();
+    if screen_width() < 980.0 || screen_height() < 560.0 {
+        return draw_narrow_game_over(game_state, game_data);
+    }
     let center_x = screen_width() / 2.0;
 
     if let Some(data) = game_data {
@@ -112,6 +115,9 @@ pub fn draw_game_over(game_state: &GameState, game_data: Option<&GameData>) -> U
 /// Draw the success screen
 pub fn draw_success(game_state: &GameState, game_data: Option<&GameData>) -> UiAction {
     draw_noir_city_background();
+    if screen_width() < 980.0 || screen_height() < 560.0 {
+        return draw_narrow_success(game_state, game_data);
+    }
     let center_x = screen_width() / 2.0;
 
     if let Some(data) = game_data {
@@ -281,5 +287,106 @@ pub fn draw_success(game_state: &GameState, game_data: Option<&GameData>) -> UiA
         }
     }
 
+    UiAction::None
+}
+
+fn draw_narrow_game_over(game_state: &GameState, game_data: Option<&GameData>) -> UiAction {
+    let Some(data) = game_data else {
+        return UiAction::None;
+    };
+    let panel = UiRect::new(12.0, 10.0, screen_width() - 24.0, screen_height() - 20.0);
+    draw_glass_panel(panel, colors::ACCENT_DANGER);
+    draw_ui_text(
+        &data.localization.ui.game_over.title,
+        panel.x + 12.0,
+        panel.y + 28.0,
+        22.0,
+        colors::FUEL_CRITICAL,
+    );
+    if let Some(reason) = game_state.game_over_reason.as_ref() {
+        draw_wrapped_text(
+            reason,
+            panel.x + 12.0,
+            panel.y + 50.0,
+            panel.w - 24.0,
+            fonts::SIZE_XS,
+            11.0,
+            colors::TEXT_SECONDARY,
+            2,
+        );
+    }
+    draw_small_caps(
+        &format!(
+            "EARNINGS ${}  |  RIDES {}  |  BANKED ${}",
+            game_state.earnings, game_state.rides_completed, game_state.shift_payout.bank
+        ),
+        panel.x + 12.0,
+        panel.y + 84.0,
+        fonts::SIZE_XS,
+        colors::ACCENT_SKY,
+    );
+    if draw_glass_button(
+        UiRect::new(12.0, screen_height() - 34.0, screen_width() - 24.0, 26.0),
+        &data.localization.ui.common.try_again,
+        colors::ACCENT_DANGER,
+        true,
+    ) {
+        return UiAction::TryAgain;
+    }
+    UiAction::None
+}
+
+fn draw_narrow_success(game_state: &GameState, game_data: Option<&GameData>) -> UiAction {
+    let Some(data) = game_data else {
+        return UiAction::None;
+    };
+    let panel = UiRect::new(12.0, 10.0, screen_width() - 24.0, screen_height() - 20.0);
+    draw_glass_panel(panel, colors::ACCENT_GOLD);
+    let title = if game_state.death_delivered {
+        "THE LAST FARE"
+    } else if game_state.run_complete {
+        "SHIFT COMPLETE"
+    } else {
+        "NIGHT COMPLETE"
+    };
+    draw_ui_text(
+        title,
+        panel.x + 12.0,
+        panel.y + 28.0,
+        22.0,
+        colors::ACCENT_GOLD,
+    );
+    draw_small_caps(
+        &format!(
+            "EARNINGS ${}  |  RIDES {}  |  BANKED ${}  |  LORE {}",
+            game_state.earnings,
+            game_state.rides_completed,
+            game_state.shift_payout.bank,
+            game_state.shift_payout.lore
+        ),
+        panel.x + 12.0,
+        panel.y + 58.0,
+        fonts::SIZE_XS,
+        colors::TEXT_PRIMARY,
+    );
+    let (label, action) = if game_state.run_complete {
+        (
+            &data.localization.ui.common.back_button,
+            UiAction::ReturnToMenu,
+        )
+    } else {
+        (
+            &data.localization.ui.success.next_night,
+            UiAction::NextNight,
+        )
+    };
+    if draw_glass_button(
+        UiRect::new(12.0, screen_height() - 34.0, screen_width() - 24.0, 26.0),
+        label,
+        colors::ACCENT_GOLD,
+        true,
+    ) {
+        return action;
+    }
     UiAction::None
 }
