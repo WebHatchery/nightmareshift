@@ -15,7 +15,7 @@
   "controls": [
     {
       "key": "SPACE",
-      "desc": "Accept / Continue"
+      "desc": "Start / Accept / Continue (when shown)"
     },
     {
       "key": "ESC",
@@ -28,6 +28,14 @@
     {
       "key": "1-4",
       "desc": "Select Route options"
+    },
+    {
+      "key": "F / B",
+      "desc": "Follow / break guideline"
+    },
+    {
+      "key": "R / I",
+      "desc": "Rules / inventory panels"
     },
     {
       "key": "Mouse",

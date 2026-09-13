@@ -3,20 +3,9 @@
 //! Drive supernatural passengers through the night, follow mysterious rules,
 //! and try to survive until dawn.
 
-#![allow(clippy::too_many_arguments)]
-
-mod audio;
-mod bot;
-mod data;
-mod engine;
-mod game;
-mod screens;
-mod state;
-mod ui;
-
-use game::Game;
 use macroquad::prelude::*;
 use macroquad_toolkit::capture;
+use nightmare_shift::Game;
 
 const DEFAULT_WINDOW_WIDTH: i32 = 1920;
 const DEFAULT_WINDOW_HEIGHT: i32 = 1080;
