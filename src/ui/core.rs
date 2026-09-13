@@ -461,6 +461,7 @@ fn passenger_portrait_bytes(id: u32) -> Option<&'static [u8]> {
         14 => Some(include_bytes!("../../assets/passengers/14.png")),
         15 => Some(include_bytes!("../../assets/passengers/15.png")),
         16 => Some(include_bytes!("../../assets/passengers/16.png")),
+        17 => Some(include_bytes!("../../assets/passengers/17.png")),
         _ => None,
     }
 }

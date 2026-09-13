@@ -126,6 +126,12 @@
         "height": 512
     },
     {
+        "prompt": "Portrait of Mara Bell, a midnight hotel bellhop in a worn burgundy uniform, tarnished brass name tag and ring of room keys, one side of her face swallowed by supernatural shadow, deserted hotel lobby at night, rain-streaked glass, pixel art style",
+        "filename": "passenger_mara_bell.png",
+        "width": 1024,
+        "height": 1024
+    },
+    {
         "prompt": "A generic mystery item in a burlap sack, pixel art style",
         "filename": "item_generic.png",
         "width": 32,

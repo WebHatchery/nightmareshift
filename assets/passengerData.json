@@ -2571,5 +2571,165 @@
     ],
     "deceptionLevel": 0.7,
     "trustRequired": 0.9
+  },
+  {
+    "id": 17,
+    "name": "Mara Bell",
+    "emoji": "🔔",
+    "description": "A midnight bellhop carrying a ring of keys that open rooms the hotel no longer has",
+    "pickup": "Downtown Hotel",
+    "destination": "Old Theater District",
+    "personalRule": "Never let the room keys ring - silence keeps the hotel from following",
+    "supernatural": "Bellhop who died waiting for a guest who never arrived",
+    "fare": 26,
+    "rarity": "uncommon",
+    "items": [
+      "room key",
+      "brass luggage tag"
+    ],
+    "dialogue": [
+      "Room seven is still waiting for its guest.",
+      "Please keep the keys quiet until we reach the station.",
+      "The elevator stopped between floors again last night.",
+      "I have carried this case farther than anyone remembers."
+    ],
+    "relationships": [
+      5
+    ],
+    "traits": [
+      "Perceptive",
+      "Calm"
+    ],
+    "backstoryUnlocked": true,
+    "backstoryDetails": "Mara worked the graveyard desk at the Grand Hotel until a guest rang from a room that had burned down decades earlier. She took the call, carried the key upstairs, and never came back down.",
+    "tells": [
+      {
+        "type": "environmental",
+        "intensity": "subtle",
+        "description": "The key ring trembles whenever the cab passes a hotel sign",
+        "audioCue": "key_chime",
+        "reliability": 0.75
+      },
+      {
+        "type": "verbal",
+        "intensity": "moderate",
+        "description": "Corrects the driver when a room number is spoken aloud",
+        "triggerPhrase": "room seven",
+        "reliability": 0.8
+      },
+      {
+        "type": "environmental",
+        "intensity": "obvious",
+        "description": "The rear-view mirror briefly reflects a hotel corridor instead of the road",
+        "reliability": 0.7
+      }
+    ],
+    "guidelineExceptions": [],
+    "deceptionLevel": 0.45,
+    "stressLevel": 0.65,
+    "trustRequired": 0.55,
+    "stateProfile": {
+      "needType": "fear",
+      "initialLevel": 42,
+      "thresholds": {
+        "warning": 60,
+        "critical": 80,
+        "meltdown": 94
+      },
+      "needChange": {
+        "passive": 4,
+        "obey": 8,
+        "break": 3,
+        "exceptionRelief": 24
+      },
+      "exceptionId": null,
+      "tellIntensities": {
+        "warning": [
+          "subtle"
+        ],
+        "critical": [
+          "moderate"
+        ]
+      },
+      "dialogueByStage": {
+        "warning": [
+          "The keys are getting restless. Please, no sudden turns."
+        ],
+        "critical": [
+          "You are making the hotel look for us. Keep driving."
+        ],
+        "meltdown": [
+          "The doors are open now. Something has checked in."
+        ]
+      },
+      "trustImpact": {
+        "warning": 0.05,
+        "critical": 0.1
+      }
+    },
+    "routePreferences": [
+      {
+        "route": "normal",
+        "preference": "likes",
+        "reason": "Steady roads keep the keys from waking",
+        "fareModifier": 1.1,
+        "stressModifier": -0.1,
+        "specialDialogue": "A steady road. The keys prefer that.",
+        "triggerChance": 0.7
+      },
+      {
+        "route": "shortcut",
+        "preference": "dislikes",
+        "reason": "Sharp turns make every key ring",
+        "fareModifier": 0.9,
+        "stressModifier": 0.2,
+        "specialDialogue": "No shortcuts. The keys do not like being hurried.",
+        "triggerChance": 0.75
+      },
+      {
+        "route": "scenic",
+        "preference": "loves",
+        "reason": "The long road passes fewer doors",
+        "fareModifier": 1.3,
+        "stressModifier": -0.2,
+        "specialDialogue": "The long road is kind. Fewer doors that way.",
+        "triggerChance": 0.85
+      },
+      {
+        "route": "police",
+        "preference": "fears",
+        "reason": "Patrol lights wake the hotel bell",
+        "fareModifier": 0.7,
+        "stressModifier": 0.35,
+        "specialDialogue": "Please turn away from the lights. They make the bell ring.",
+        "triggerChance": 0.8
+      }
+    ],
+    "spawnWeighting": {
+      "weather": {
+        "rain": 1.5,
+        "fog": 1.4
+      },
+      "time": {
+        "latenight": 1.8,
+        "night": 1.3
+      },
+      "season": {
+        "winter": 1.2
+      },
+      "heavyWeatherBoost": 1.25,
+      "supernaturalTimeScaling": true,
+      "fogNightBoost": 1.4
+    },
+    "itemCategory": "occult",
+    "isSupernatural": true,
+    "dropItems": [
+      "Old Key",
+      "Forgotten Wallet"
+    ],
+    "wantsTrade": true,
+    "wantedItems": [
+      "Old Key"
+    ]
   }
 ]

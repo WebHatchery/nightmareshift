@@ -277,7 +277,7 @@ pub const DEATHS_RULE_ID: u32 = 20;
 pub struct Passenger {
     pub id: u32,
     pub name: String,
-    // `emoji` is authored on all sixteen passengers and read by nothing:
+    // `emoji` is authored on every passenger and read by nothing:
     // the screens draw vector portraits and shapes, not glyphs.
     pub description: String,
     pub pickup: String,
