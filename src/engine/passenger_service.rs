@@ -15,6 +15,7 @@ pub struct PassengerSelectionContext<'a> {
     pub time_of_day: &'a TimeOfDay,
     pub season: &'a Season,
     pub constants: &'a ConstantsData,
+    pub locations: &'a [Location],
 }
 
 impl PassengerService {
@@ -123,8 +124,10 @@ impl PassengerService {
                 let season_mod = Self::get_seasonal_modifier(p, context.season);
                 let special_mod =
                     Self::get_special_behavior_modifier(p, context.weather, context.time_of_day);
+                let location_mod = Self::get_location_modifier(p, context.locations);
 
-                let final_weight = base_weight * weather_mod * time_mod * season_mod * special_mod;
+                let final_weight =
+                    base_weight * weather_mod * time_mod * season_mod * special_mod * location_mod;
                 ((*p).clone(), final_weight.max(0.1))
             })
             .collect();
@@ -260,6 +263,20 @@ impl PassengerService {
         }
 
         modifier
+    }
+
+    fn get_location_modifier(passenger: &Passenger, locations: &[Location]) -> f32 {
+        let pickup = locations
+            .iter()
+            .find(|location| location.name == passenger.pickup)
+            .map(|location| location.spawn_affinity)
+            .unwrap_or(1.0);
+        let destination = locations
+            .iter()
+            .find(|location| location.name == passenger.destination)
+            .map(|location| location.spawn_affinity)
+            .unwrap_or(1.0);
+        (pickup * 0.7 + destination * 0.3).max(0.1)
     }
 
     /// Check if backstory should unlock

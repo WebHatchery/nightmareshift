@@ -4,167 +4,263 @@
         "description": "Flickering streetlights illuminate empty sidewalks",
         "atmosphere": "Urban decay",
         "riskLevel": 2,
-        "fareModifier": 1.0
+        "fareModifier": 1.0,
+        "distanceMultiplier": 0.9,
+        "fuelMultiplier": 0.9,
+        "spawnAffinity": 1.2,
+        "destinationRisk": 0.1
     },
     {
         "name": "Riverside Cemetery",
         "description": "Ancient tombstones shrouded in fog",
         "atmosphere": "Haunted",
         "riskLevel": 4,
-        "fareModifier": 1.3
+        "fareModifier": 1.3,
+        "distanceMultiplier": 1.2,
+        "fuelMultiplier": 1.15,
+        "spawnAffinity": 1.1,
+        "destinationRisk": 0.6
     },
     {
         "name": "Office District",
         "description": "Glass towers with only a few lights on",
         "atmosphere": "Corporate desolation",
         "riskLevel": 1,
-        "fareModifier": 0.9
+        "fareModifier": 0.9,
+        "distanceMultiplier": 0.8,
+        "fuelMultiplier": 0.85,
+        "spawnAffinity": 1.25,
+        "destinationRisk": 0.0
     },
     {
         "name": "Industrial Warehouse",
         "description": "Loading docks and chain-link fences",
         "atmosphere": "Abandoned industry",
         "riskLevel": 3,
-        "fareModifier": 1.15
+        "fareModifier": 1.15,
+        "distanceMultiplier": 1.1,
+        "fuelMultiplier": 1.1,
+        "spawnAffinity": 1.0,
+        "destinationRisk": 0.3
     },
     {
         "name": "Forest Road",
         "description": "Tall trees block out the moonlight",
         "atmosphere": "Wilderness danger",
         "riskLevel": 5,
-        "fareModifier": 1.4
+        "fareModifier": 1.4,
+        "distanceMultiplier": 1.35,
+        "fuelMultiplier": 1.25,
+        "spawnAffinity": 0.95,
+        "destinationRisk": 0.8
     },
     {
         "name": "Abandoned Hospital",
         "description": "Broken windows and overgrown parking lot",
         "atmosphere": "Medical horror",
         "riskLevel": 5,
-        "fareModifier": 1.45
+        "fareModifier": 1.45,
+        "distanceMultiplier": 1.3,
+        "fuelMultiplier": 1.2,
+        "spawnAffinity": 0.9,
+        "destinationRisk": 0.8
     },
     {
         "name": "Elementary School",
         "description": "Empty playground with swings moving in windless air",
         "atmosphere": "Childhood terror",
         "riskLevel": 3,
-        "fareModifier": 1.2
+        "fareModifier": 1.2,
+        "distanceMultiplier": 1.05,
+        "fuelMultiplier": 1.0,
+        "spawnAffinity": 1.1,
+        "destinationRisk": 0.3
     },
     {
         "name": "Suburban House",
         "description": "Cookie-cutter homes with too-perfect lawns",
         "atmosphere": "False normalcy",
         "riskLevel": 2,
-        "fareModifier": 0.95
+        "fareModifier": 0.95,
+        "distanceMultiplier": 0.95,
+        "fuelMultiplier": 0.95,
+        "spawnAffinity": 1.1,
+        "destinationRisk": 0.1
     },
     {
         "name": "Old Theater District",
         "description": "Faded marquees and darkened stage doors",
         "atmosphere": "Forgotten glamour",
         "riskLevel": 3,
-        "fareModifier": 1.1
+        "fareModifier": 1.1,
+        "distanceMultiplier": 1.0,
+        "fuelMultiplier": 1.0,
+        "spawnAffinity": 1.05,
+        "destinationRisk": 0.3
     },
     {
         "name": "Downtown Hotel",
         "description": "Art deco lobby with no guests at the desk",
         "atmosphere": "Transient luxury",
         "riskLevel": 2,
-        "fareModifier": 1.05
+        "fareModifier": 1.05,
+        "distanceMultiplier": 0.95,
+        "fuelMultiplier": 0.95,
+        "spawnAffinity": 1.0,
+        "destinationRisk": 0.1
     },
     {
         "name": "Police Station",
         "description": "Harsh fluorescent lights and barred windows",
         "atmosphere": "Institutional authority",
         "riskLevel": 1,
-        "fareModifier": 0.85
+        "fareModifier": 0.85,
+        "distanceMultiplier": 0.85,
+        "fuelMultiplier": 0.9,
+        "spawnAffinity": 1.2,
+        "destinationRisk": 0.0
     },
     {
         "name": "General Hospital",
         "description": "Sterile corridors echoing with distant footsteps",
         "atmosphere": "Clinical dread",
         "riskLevel": 2,
-        "fareModifier": 1.0
+        "fareModifier": 1.0,
+        "distanceMultiplier": 0.9,
+        "fuelMultiplier": 0.95,
+        "spawnAffinity": 1.0,
+        "destinationRisk": 0.1
     },
     {
         "name": "Harbor District",
         "description": "Fog-shrouded docks with creaking piers",
         "atmosphere": "Maritime mystery",
         "riskLevel": 4,
-        "fareModifier": 1.3
+        "fareModifier": 1.3,
+        "distanceMultiplier": 1.2,
+        "fuelMultiplier": 1.15,
+        "spawnAffinity": 0.95,
+        "destinationRisk": 0.6
     },
     {
         "name": "Psychic Shop",
         "description": "Neon palm reader sign buzzing in the window",
         "atmosphere": "Occult commerce",
         "riskLevel": 3,
-        "fareModifier": 1.15
+        "fareModifier": 1.15,
+        "distanceMultiplier": 1.1,
+        "fuelMultiplier": 1.05,
+        "spawnAffinity": 1.05,
+        "destinationRisk": 0.3
     },
     {
         "name": "Music Hall",
         "description": "Grand concert hall with dust motes dancing in spotlight",
         "atmosphere": "Haunted artistry",
         "riskLevel": 3,
-        "fareModifier": 1.1
+        "fareModifier": 1.1,
+        "distanceMultiplier": 1.05,
+        "fuelMultiplier": 1.0,
+        "spawnAffinity": 1.0,
+        "destinationRisk": 0.3
     },
     {
         "name": "Old Cathedral",
         "description": "Gothic spires piercing the night sky",
         "atmosphere": "Sacred sanctuary",
         "riskLevel": 2,
-        "fareModifier": 1.0
+        "fareModifier": 1.0,
+        "distanceMultiplier": 0.95,
+        "fuelMultiplier": 0.95,
+        "spawnAffinity": 1.0,
+        "destinationRisk": 0.1
     },
     {
         "name": "Seminary",
         "description": "Ivy-covered religious institution with glowing windows",
         "atmosphere": "Theological study",
         "riskLevel": 1,
-        "fareModifier": 0.9
+        "fareModifier": 0.9,
+        "distanceMultiplier": 0.9,
+        "fuelMultiplier": 0.9,
+        "spawnAffinity": 1.15,
+        "destinationRisk": 0.0
     },
     {
         "name": "Crime Scene",
         "description": "Yellow tape fluttering around chalk outlines",
         "atmosphere": "Recent violence",
         "riskLevel": 4,
-        "fareModifier": 1.35
+        "fareModifier": 1.35,
+        "distanceMultiplier": 1.2,
+        "fuelMultiplier": 1.1,
+        "spawnAffinity": 0.95,
+        "destinationRisk": 0.6
     },
     {
         "name": "City Hall",
         "description": "Imposing government building with marble columns",
         "atmosphere": "Municipal power",
         "riskLevel": 2,
-        "fareModifier": 1.0
+        "fareModifier": 1.0,
+        "distanceMultiplier": 1.0,
+        "fuelMultiplier": 1.0,
+        "spawnAffinity": 1.0,
+        "destinationRisk": 0.1
     },
     {
         "name": "Private Estate",
         "description": "Gated mansion hidden behind ancient oak trees",
         "atmosphere": "Exclusive mystery",
         "riskLevel": 4,
-        "fareModifier": 1.3
+        "fareModifier": 1.3,
+        "distanceMultiplier": 1.25,
+        "fuelMultiplier": 1.15,
+        "spawnAffinity": 0.9,
+        "destinationRisk": 0.6
     },
     {
         "name": "Private Residence",
         "description": "Unremarkable house with secrets behind curtained windows",
         "atmosphere": "Hidden darkness",
         "riskLevel": 3,
-        "fareModifier": 1.15
+        "fareModifier": 1.15,
+        "distanceMultiplier": 1.05,
+        "fuelMultiplier": 1.0,
+        "spawnAffinity": 1.05,
+        "destinationRisk": 0.3
     },
     {
         "name": "Antique Shop",
         "description": "Cluttered storefront filled with objects from forgotten times",
         "atmosphere": "Temporal commerce",
         "riskLevel": 3,
-        "fareModifier": 1.1
+        "fareModifier": 1.1,
+        "distanceMultiplier": 1.15,
+        "fuelMultiplier": 1.05,
+        "spawnAffinity": 1.0,
+        "destinationRisk": 0.3
     },
     {
         "name": "Crossroads",
         "description": "Four paths meeting where streetlights fail to reach",
         "atmosphere": "Decision point",
         "riskLevel": 5,
-        "fareModifier": 1.5
+        "fareModifier": 1.5,
+        "distanceMultiplier": 1.3,
+        "fuelMultiplier": 1.2,
+        "spawnAffinity": 0.9,
+        "destinationRisk": 0.8
     },
     {
         "name": "End of the Line",
         "description": "The place where all journeys ultimately lead",
         "atmosphere": "Final destination",
         "riskLevel": 5,
-        "fareModifier": 1.6
+        "fareModifier": 1.6,
+        "distanceMultiplier": 1.4,
+        "fuelMultiplier": 1.3,
+        "spawnAffinity": 0.85,
+        "destinationRisk": 0.9
     }
 ]

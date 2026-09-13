@@ -13,6 +13,7 @@ use crate::data::{ActionType, GameData, RouteType, Rule, RuleType};
 use crate::engine::*;
 use crate::screens::Screen;
 use crate::state::*;
+use macroquad_toolkit::input::GamepadInput;
 use macroquad_toolkit::ui::ScrollArea;
 
 const SIMULATION_TICK_SECONDS: f64 = 1.0 / 60.0;
@@ -106,6 +107,7 @@ pub struct Game {
     help_return_screen: Screen,
     tutorial_active: bool,
     audio: AudioMixer,
+    gamepad: GamepadInput,
 }
 
 /// The launch-time seed, if one was asked for. Native only: the web build
@@ -217,6 +219,7 @@ impl Game {
             help_return_screen: Screen::MainMenu,
             tutorial_active: false,
             audio,
+            gamepad: GamepadInput::new(),
         }
     }
 

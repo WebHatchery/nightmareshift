@@ -1,9 +1,10 @@
 //! Input service for mapping user input to game actions.
 
 use crate::screens::Screen;
-use crate::state::GamePhase;
+use crate::state::{GamePhase, KeyBindings};
 use crate::ui::UiAction;
 use macroquad::prelude::*; // GamePhase is in state, need to ensure imports are correct in mod.rs
+use macroquad_toolkit::input::GamepadFrame;
 
 /// Which modal overlay is eating input this frame. While one is open, the
 /// only keys read are the ones that dismiss it (or trade it for the pause
@@ -22,24 +23,34 @@ pub struct InputService;
 impl InputService {
     /// Capture input and return a list of triggered UI actions
     pub fn capture_input(screen: Screen, game_phase: GamePhase, overlay: Overlay) -> Vec<UiAction> {
+        Self::capture_input_with_bindings(screen, game_phase, overlay, &KeyBindings::default())
+    }
+
+    /// Capture input using the player's persisted decision bindings.
+    pub fn capture_input_with_bindings(
+        screen: Screen,
+        game_phase: GamePhase,
+        overlay: Overlay,
+        bindings: &KeyBindings,
+    ) -> Vec<UiAction> {
         let mut actions = Vec::new();
 
         match screen {
             Screen::MainMenu => {
-                if is_key_pressed(KeyCode::Space) {
+                if Self::binding_pressed(&bindings.accept, KeyCode::Space) {
                     actions.push(UiAction::StartGame);
                 }
             }
             Screen::Briefing => {
-                if is_key_pressed(KeyCode::Space) {
+                if Self::binding_pressed(&bindings.accept, KeyCode::Space) {
                     actions.push(UiAction::StartGame); // Mapped to StartShift in context
                 }
-                if is_key_pressed(KeyCode::Escape) {
+                if Self::binding_pressed(&bindings.pause, KeyCode::Escape) {
                     actions.push(UiAction::ReturnToMenu);
                 }
             }
             Screen::Game if overlay == Overlay::Pause => {
-                if is_key_pressed(KeyCode::Escape) {
+                if Self::binding_pressed(&bindings.pause, KeyCode::Escape) {
                     actions.push(UiAction::TogglePauseMenu);
                 }
             }
@@ -77,16 +88,16 @@ impl InputService {
                 // Phase specific input
                 match game_phase {
                     GamePhase::Waiting => {
-                        if is_key_pressed(KeyCode::Space) {
+                        if Self::binding_pressed(&bindings.accept, KeyCode::Space) {
                             actions.push(UiAction::Continue); // Spawn passenger
                         }
                     }
                     GamePhase::RideRequest => {
-                        if is_key_pressed(KeyCode::Space) {
+                        if Self::binding_pressed(&bindings.accept, KeyCode::Space) {
                             actions.push(UiAction::AcceptRide);
                         }
                         // D matches the button label; ESC pauses now.
-                        if is_key_pressed(KeyCode::D) {
+                        if Self::binding_pressed(&bindings.decline, KeyCode::D) {
                             actions.push(UiAction::DeclineRide);
                         }
                         Self::capture_cab_controls(&mut actions);
@@ -110,13 +121,13 @@ impl InputService {
                                 actions.push(UiAction::SelectEventChoice(index));
                             }
                         }
-                        if is_key_pressed(KeyCode::Space) {
+                        if Self::binding_pressed(&bindings.accept, KeyCode::Space) {
                             actions.push(UiAction::Continue);
                         }
                         Self::capture_cab_controls(&mut actions);
                     }
                     GamePhase::DropOff => {
-                        if is_key_pressed(KeyCode::Space) {
+                        if Self::binding_pressed(&bindings.accept, KeyCode::Space) {
                             actions.push(UiAction::Continue);
                         }
                         Self::capture_cab_controls(&mut actions);
@@ -125,10 +136,10 @@ impl InputService {
                     // game and was the only phase with no keys at all, so a
                     // thirty-second deadline had to be met with the mouse.
                     GamePhase::GuidelineDecision => {
-                        if is_key_pressed(KeyCode::F) {
+                        if Self::binding_pressed(&bindings.follow, KeyCode::F) {
                             actions.push(UiAction::FollowGuideline);
                         }
-                        if is_key_pressed(KeyCode::B) {
+                        if Self::binding_pressed(&bindings.break_guideline, KeyCode::B) {
                             actions.push(UiAction::BreakGuideline);
                         }
                         // The rules panel's cab-action buttons stay live in
@@ -149,7 +160,7 @@ impl InputService {
                 if is_key_pressed(KeyCode::Space) {
                     actions.push(UiAction::TryAgain);
                 }
-                if is_key_pressed(KeyCode::Escape) {
+                if Self::binding_pressed(&bindings.pause, KeyCode::Escape) {
                     actions.push(UiAction::ReturnToMenu);
                 }
             }
@@ -200,6 +211,101 @@ impl InputService {
         actions
     }
 
+    /// Map the toolkit's semantic controller frame onto the same UI actions
+    /// used by touch and keyboard. Directional controls select the four
+    /// numbered choices; confirm/cancel preserve the visible button meaning.
+    pub fn capture_gamepad(
+        screen: Screen,
+        game_phase: GamePhase,
+        overlay: Overlay,
+        frame: GamepadFrame,
+        resume_available: bool,
+    ) -> Vec<UiAction> {
+        if !frame.connected {
+            return Vec::new();
+        }
+        let mut actions = Vec::new();
+        match screen {
+            Screen::MainMenu if frame.confirm => {
+                actions.push(if resume_available {
+                    UiAction::ResumeRun
+                } else {
+                    UiAction::StartGame
+                });
+            }
+            Screen::Briefing if frame.confirm => actions.push(UiAction::StartGame),
+            Screen::Game if overlay == Overlay::Pause && frame.cancel => {
+                actions.push(UiAction::TogglePauseMenu)
+            }
+            Screen::Game if overlay == Overlay::Panel && frame.cancel => {
+                actions.push(UiAction::TogglePauseMenu)
+            }
+            Screen::Game if frame.menu || frame.cancel => actions.push(UiAction::TogglePauseMenu),
+            Screen::Game => match game_phase {
+                GamePhase::Waiting | GamePhase::DropOff if frame.confirm => {
+                    actions.push(UiAction::Continue)
+                }
+                GamePhase::RideRequest => {
+                    if frame.confirm {
+                        actions.push(UiAction::AcceptRide);
+                    }
+                    if frame.secondary {
+                        actions.push(UiAction::DeclineRide);
+                    }
+                }
+                GamePhase::Driving => {
+                    for (index, selected) in [frame.up, frame.down, frame.left, frame.right]
+                        .into_iter()
+                        .enumerate()
+                    {
+                        if selected {
+                            actions.push(UiAction::SelectRoute(index));
+                            break;
+                        }
+                    }
+                }
+                GamePhase::Interaction => {
+                    if frame.confirm {
+                        actions.push(UiAction::Continue);
+                    }
+                    for (index, selected) in [frame.tertiary, frame.next, frame.previous]
+                        .into_iter()
+                        .enumerate()
+                    {
+                        if selected {
+                            actions.push(UiAction::SelectEventChoice(index));
+                            break;
+                        }
+                    }
+                }
+                GamePhase::GuidelineDecision => {
+                    if frame.confirm {
+                        actions.push(UiAction::FollowGuideline);
+                    }
+                    if frame.secondary {
+                        actions.push(UiAction::BreakGuideline);
+                    }
+                }
+                _ => {}
+            },
+            Screen::GameOver | Screen::Success => {
+                if frame.confirm {
+                    actions.push(UiAction::TryAgain);
+                }
+                if frame.cancel {
+                    actions.push(UiAction::ReturnToMenu);
+                }
+            }
+            Screen::SkillTree | Screen::Almanac | Screen::Leaderboard | Screen::HelpOptions
+                if frame.cancel =>
+            {
+                actions.push(UiAction::ReturnToMenu);
+            }
+            _ => {}
+        }
+        actions
+    }
+
     /// The digits 1-4, top row and keypad, in the order the screens number
     /// their options.
     fn number_keys() -> impl Iterator<Item = (KeyCode, KeyCode)> {
@@ -210,6 +316,23 @@ impl InputService {
             (KeyCode::Key4, KeyCode::Kp4),
         ]
         .into_iter()
+    }
+
+    fn binding_pressed(binding: &str, fallback: KeyCode) -> bool {
+        let key = match binding {
+            "SPACE" => KeyCode::Space,
+            "ENTER" => KeyCode::Enter,
+            "ESC" => KeyCode::Escape,
+            "D" => KeyCode::D,
+            "X" => KeyCode::X,
+            "F" => KeyCode::F,
+            "J" => KeyCode::J,
+            "B" => KeyCode::B,
+            "K" => KeyCode::K,
+            "P" => KeyCode::P,
+            _ => fallback,
+        };
+        is_key_pressed(key)
     }
 
     fn capture_cab_controls(actions: &mut Vec<UiAction>) {

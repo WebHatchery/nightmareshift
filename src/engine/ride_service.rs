@@ -73,6 +73,7 @@ impl RideService {
             time_of_day: &state.time_of_day,
             season: &state.season,
             constants: &data.constants,
+            locations: &data.locations,
         };
 
         // A night should read as connected rather than a shuffle: having

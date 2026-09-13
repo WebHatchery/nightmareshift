@@ -19,6 +19,21 @@ fn cycle_volume(value: u8) -> u8 {
 impl Game {
     /// Handle UI actions from draw phase
     pub fn handle_ui_action(&mut self, action: UiAction) {
+        let feedback = matches!(
+            action,
+            UiAction::StartGame
+                | UiAction::ResumeRun
+                | UiAction::AcceptRide
+                | UiAction::SelectRoute(_)
+                | UiAction::SelectEventChoice(_)
+                | UiAction::Continue
+                | UiAction::FollowGuideline
+                | UiAction::BreakGuideline
+        );
+        if !matches!(action, UiAction::None) {
+            self.audio
+                .play_ui_feedback(feedback, &self.player_stats.accessibility);
+        }
         match action {
             UiAction::StartGame => {
                 // With the seed modal open, Space is typing, not starting.
@@ -251,6 +266,26 @@ impl Game {
                 }
                 Err(error) => self.save_notice = Some(format!("Could not import save: {error}")),
             },
+            UiAction::CycleAcceptBinding => {
+                self.player_stats.accessibility.key_bindings.cycle_accept();
+                self.save_stats();
+            }
+            UiAction::CycleDeclineBinding => {
+                self.player_stats.accessibility.key_bindings.cycle_decline();
+                self.save_stats();
+            }
+            UiAction::CycleFollowBinding => {
+                self.player_stats.accessibility.key_bindings.cycle_follow();
+                self.save_stats();
+            }
+            UiAction::CycleBreakBinding => {
+                self.player_stats.accessibility.key_bindings.cycle_break();
+                self.save_stats();
+            }
+            UiAction::CyclePauseBinding => {
+                self.player_stats.accessibility.key_bindings.cycle_pause();
+                self.save_stats();
+            }
             UiAction::UseItem(idx) => {
                 if self.screen == Screen::Game && idx < self.game_state.inventory.len() {
                     self.use_item(idx);

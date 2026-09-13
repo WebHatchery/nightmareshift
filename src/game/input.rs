@@ -46,11 +46,20 @@ impl Game {
             }
             return;
         }
-        let actions = InputService::capture_input(
+        let mut actions = InputService::capture_input_with_bindings(
             self.screen,
             self.game_state.game_phase,
             self.active_overlay(),
+            &self.player_stats.accessibility.key_bindings,
         );
+        let gamepad = self.gamepad.capture();
+        actions.extend(InputService::capture_gamepad(
+            self.screen,
+            self.game_state.game_phase,
+            self.active_overlay(),
+            gamepad,
+            self.resume_available,
+        ));
         for action in actions {
             self.handle_ui_action(action);
         }

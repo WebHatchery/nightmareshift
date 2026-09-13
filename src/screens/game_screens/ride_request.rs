@@ -221,21 +221,21 @@ pub fn draw_ride_request(
             }
         }
 
-        let (accept_text, decline_text) = if let Some(data) = game_data {
-            (
-                data.localization.ui.common.accept_space.as_str(),
-                data.localization.ui.common.decline_key.as_str(),
-            )
-        } else {
-            ("Accept (SPACE)", "Decline (D)")
-        };
+        let accept_text = format!(
+            "Accept ({})",
+            player_stats.accessibility.key_bindings.accept
+        );
+        let decline_text = format!(
+            "Decline ({})",
+            player_stats.accessibility.key_bindings.decline
+        );
 
         let gap = 14.0;
         let btn_w = (info_w - gap) / 2.0;
         let btn_y = panel.bottom() - spacing::PADDING_MD - btn_h;
         if draw_glass_button(
             UiRect::new(info_x, btn_y, btn_w, btn_h),
-            accept_text,
+            &accept_text,
             colors::ACCENT_PRIMARY,
             true,
         ) {
@@ -243,7 +243,7 @@ pub fn draw_ride_request(
         }
         if draw_glass_button(
             UiRect::new(info_x + btn_w + gap, btn_y, btn_w, btn_h),
-            decline_text,
+            &decline_text,
             colors::ACCENT_DANGER,
             true,
         ) {

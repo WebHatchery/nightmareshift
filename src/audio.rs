@@ -53,6 +53,13 @@ impl Cue {
 
     fn from_authored(name: &str) -> Self {
         match name {
+            "child_distress" => Self::Tension,
+            "distressed_breathing" => Self::Tension,
+            "haunting_hum" => Self::Rain,
+            "hunger_growl" => Self::Brink,
+            "labored_breathing" => Self::Tension,
+            "panicked_plea" => Self::Brink,
+            "voice_escalation" => Self::Brink,
             "violation" => Self::Violation,
             "ward" => Self::Ward,
             "brink" => Self::Brink,
@@ -132,6 +139,14 @@ impl AudioMixer {
         }
     }
 
+    /// Short UI feedback uses the same effects channel as authored stingers,
+    /// and remains optional because captions and button state carry the
+    /// meaning even when sound is muted or unavailable.
+    pub fn play_ui_feedback(&self, confirm: bool, settings: &AccessibilitySettings) {
+        let cue = if confirm { Cue::Success } else { Cue::Warning };
+        self.play(cue, Self::volume(settings, settings.effects_volume) * 0.22);
+    }
+
     /// Keep layered ambience aligned with current weather and need, then drain
     /// the one-shot cue queue. Audio conveys state already shown by meters,
     /// reactions and captions; it never owns a rule or required fact alone.
@@ -168,5 +183,30 @@ impl AudioMixer {
         if let Some(event) = state.pending_audio.take() {
             self.play(Cue::from_authored(&event.cue), effects * 0.72);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Cue;
+
+    #[test]
+    fn every_authored_passenger_cue_uses_a_specific_audio_layer() {
+        for cue in [
+            "child_distress",
+            "distressed_breathing",
+            "haunting_hum",
+            "hunger_growl",
+            "labored_breathing",
+            "panicked_plea",
+            "voice_escalation",
+        ] {
+            assert_ne!(Cue::from_authored(cue), Cue::Warning, "{cue} fell through");
+        }
+    }
+
+    #[test]
+    fn unknown_audio_cues_still_degrade_to_the_safe_warning_layer() {
+        assert_eq!(Cue::from_authored("future_cue"), Cue::Warning);
     }
 }

@@ -308,9 +308,13 @@ impl Game {
         }
 
         let action_y = stat_y + 104.0;
+        let resume_label = format!(
+            "Resume ({})",
+            self.player_stats.accessibility.key_bindings.pause
+        );
         if draw_glass_button(
             UiRect::new(inner.x, action_y, inner.w, 48.0),
-            "Resume (ESC)",
+            &resume_label,
             colors::CAB_YELLOW,
             true,
         ) {

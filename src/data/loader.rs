@@ -216,6 +216,19 @@ impl GameData {
                 }
             }
         }
+        for location in &self.locations {
+            if location.fare_modifier <= 0.0
+                || location.distance_multiplier <= 0.0
+                || location.fuel_multiplier <= 0.0
+                || location.spawn_affinity <= 0.0
+                || location.destination_risk < 0.0
+            {
+                return Err(format!(
+                    "locationData.json: location {} has an invalid route or spawn modifier",
+                    location.name
+                ));
+            }
+        }
         for rule in &self.rules {
             if let Some(guideline) = rule.related_guideline_id {
                 if !guideline_ids.contains(&guideline) {

@@ -187,6 +187,36 @@ pub fn draw_help_options(stats: &PlayerStats, tutorial_active: bool) -> UiAction
             UiAction::CycleEffectsVolume,
         ),
         (
+            "A",
+            "Accept shortcut",
+            settings.key_bindings.accept.clone(),
+            UiAction::CycleAcceptBinding,
+        ),
+        (
+            "D",
+            "Decline shortcut",
+            settings.key_bindings.decline.clone(),
+            UiAction::CycleDeclineBinding,
+        ),
+        (
+            "F",
+            "Follow shortcut",
+            settings.key_bindings.follow.clone(),
+            UiAction::CycleFollowBinding,
+        ),
+        (
+            "B",
+            "Break shortcut",
+            settings.key_bindings.break_guideline.clone(),
+            UiAction::CycleBreakBinding,
+        ),
+        (
+            "P",
+            "Pause shortcut",
+            settings.key_bindings.pause.clone(),
+            UiAction::CyclePauseBinding,
+        ),
+        (
             "X",
             "Export backup",
             "Keep a restore copy".to_string(),
@@ -217,6 +247,17 @@ pub fn draw_help_options(stats: &PlayerStats, tutorial_active: bool) -> UiAction
         if option_button(rect, key, label, value) {
             return action.clone();
         }
+    }
+
+    let conflicts = settings.key_bindings.conflicts();
+    if !conflicts.is_empty() {
+        draw_small_caps(
+            &format!("Binding conflict: {}", conflicts.join(", ")),
+            oi.x,
+            options.bottom() - 18.0,
+            fonts::SIZE_XS,
+            colors::FUEL_CRITICAL,
+        );
     }
 
     if draw_glass_button(

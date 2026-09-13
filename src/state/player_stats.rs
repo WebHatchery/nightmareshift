@@ -1,6 +1,7 @@
 //! Player statistics tracking across sessions.
 
 use super::game_state::PassengerReputation;
+use super::key_bindings::KeyBindings;
 use crate::data::RouteType;
 use macroquad_toolkit::achievements::{Achievement, Achievements};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -121,6 +122,8 @@ pub struct AccessibilitySettings {
     pub music_volume: u8,
     #[serde(default = "default_volume")]
     pub effects_volume: u8,
+    #[serde(default)]
+    pub key_bindings: KeyBindings,
 }
 
 impl Default for AccessibilitySettings {
@@ -136,6 +139,7 @@ impl Default for AccessibilitySettings {
             ambience_volume: default_volume(),
             music_volume: default_volume(),
             effects_volume: default_volume(),
+            key_bindings: KeyBindings::default(),
         }
     }
 }

@@ -1,4 +1,7 @@
 use crate::data::loader::load_localization;
+use crate::screens::Screen;
+use crate::state::{GamePhase, KeyBindings};
+use macroquad_toolkit::input::GamepadFrame;
 
 /// Every key a button advertises must be one the input service reads on
 /// the screen that shows it.
@@ -168,4 +171,62 @@ fn the_timed_decision_has_keys_and_advertises_them() {
         "the break button does not name its key: {:?}",
         guidelines.break_guideline
     );
+}
+
+#[test]
+fn gamepad_confirm_and_cancel_follow_visible_gameplay_actions() {
+    let confirm = GamepadFrame {
+        connected: true,
+        confirm: true,
+        ..Default::default()
+    };
+    let actions = super::InputService::capture_gamepad(
+        Screen::Game,
+        GamePhase::RideRequest,
+        super::Overlay::None,
+        confirm,
+        false,
+    );
+    assert_eq!(actions, vec![crate::ui::UiAction::AcceptRide]);
+
+    let cancel = GamepadFrame {
+        connected: true,
+        cancel: true,
+        ..Default::default()
+    };
+    let actions = super::InputService::capture_gamepad(
+        Screen::Game,
+        GamePhase::Driving,
+        super::Overlay::None,
+        cancel,
+        false,
+    );
+    assert_eq!(actions, vec![crate::ui::UiAction::TogglePauseMenu]);
+}
+
+#[test]
+fn gamepad_directions_choose_numbered_route_options() {
+    let frame = GamepadFrame {
+        connected: true,
+        right: true,
+        ..Default::default()
+    };
+    let actions = super::InputService::capture_gamepad(
+        Screen::Game,
+        GamePhase::Driving,
+        super::Overlay::None,
+        frame,
+        false,
+    );
+    assert_eq!(actions, vec![crate::ui::UiAction::SelectRoute(3)]);
+}
+
+#[test]
+fn custom_binding_labels_are_serializable_and_defaulted() {
+    let mut bindings = KeyBindings::default();
+    bindings.cycle_accept();
+    let encoded = serde_json::to_string(&bindings).expect("bindings serialize");
+    let restored: KeyBindings = serde_json::from_str(&encoded).expect("bindings deserialize");
+    assert_eq!(restored.accept, "ENTER");
+    assert!(restored.conflicts().is_empty());
 }

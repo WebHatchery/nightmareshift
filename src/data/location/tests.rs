@@ -34,6 +34,16 @@ fn location_risk_sits_within_the_authored_scale() {
     }
 }
 
+#[test]
+fn locations_author_route_and_spawn_modifiers() {
+    for location in load_locations() {
+        assert!(location.distance_multiplier > 0.0);
+        assert!(location.fuel_multiplier > 0.0);
+        assert!(location.spawn_affinity > 0.0);
+        assert!(location.destination_risk >= 0.0);
+    }
+}
+
 /// Every pickup and destination a passenger names must be a real
 /// location, or the ride request shows a route to nowhere and the
 /// pickup's risk silently defaults.

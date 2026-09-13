@@ -51,7 +51,7 @@ impl RouteService {
             }
         }
 
-        Self::calculate_route_costs(
+        let mut costs = Self::calculate_route_costs(
             route,
             &data.constants,
             passenger_risk,
@@ -61,7 +61,9 @@ impl RouteService {
             &stats.route_mastery_map(),
             state.current_passenger.as_ref(),
             &crate::engine::SkillModifiers::from_unlocked(&data.skills, &stats.unlocked_skills),
-        )
+        );
+        Self::apply_location_modifiers(&mut costs, state, data);
+        costs
     }
 
     /// What a passenger would pay on each road, smallest and largest.
@@ -287,6 +289,33 @@ impl RouteService {
             time: time.round() as u32,
             risk: risk.round().clamp(0.0, max_risk) as u32,
         }
+    }
+
+    fn apply_location_modifiers(costs: &mut RouteCosts, state: &GameState, data: &GameData) {
+        let Some(passenger) = state.current_passenger.as_ref() else {
+            return;
+        };
+        let pickup = data.get_location(&passenger.pickup);
+        let destination = data.get_location(&passenger.destination);
+        let distance = pickup
+            .map(|location| location.distance_multiplier)
+            .unwrap_or(1.0)
+            * destination
+                .map(|location| location.distance_multiplier)
+                .unwrap_or(1.0);
+        let fuel = pickup
+            .map(|location| location.fuel_multiplier)
+            .unwrap_or(1.0)
+            * destination
+                .map(|location| location.fuel_multiplier)
+                .unwrap_or(1.0);
+        costs.time = (costs.time as f32 * distance).round() as u32;
+        costs.fuel = (costs.fuel as f32 * fuel).round() as u32;
+        costs.risk = (costs.risk as f32
+            + destination
+                .map(|location| location.destination_risk)
+                .unwrap_or(0.0))
+        .round() as u32;
     }
 
     /// Generate 3 risk tags for a route context.

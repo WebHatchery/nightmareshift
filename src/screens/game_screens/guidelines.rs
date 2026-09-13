@@ -12,6 +12,14 @@ use crate::ui::{
 
 use super::scene::draw_bottom_taxi_scene;
 
+fn label_with_binding(label: &str, binding: &str) -> String {
+    let base = label
+        .strip_suffix(')')
+        .and_then(|without_close| without_close.rsplit_once(" ("))
+        .map_or(label, |(base, _)| base);
+    format!("{base} ({binding})")
+}
+
 /// Draw the guideline decision screen
 pub fn draw_guideline_decision(
     game_state: &GameState,
@@ -300,9 +308,17 @@ pub fn draw_guideline_decision(
             }
 
             // Follow guideline button (left)
+            let follow_text = label_with_binding(
+                &data.localization.ui.game.guidelines.follow,
+                &player_stats.accessibility.key_bindings.follow,
+            );
+            let break_text = label_with_binding(
+                &data.localization.ui.game.guidelines.break_guideline,
+                &player_stats.accessibility.key_bindings.break_guideline,
+            );
             if draw_glass_button(
                 UiRect::new(center_x - btn_w - btn_spacing / 2.0, y, btn_w, btn_h),
-                &data.localization.ui.game.guidelines.follow,
+                &follow_text,
                 colors::FUEL_GOOD,
                 true,
             ) {
@@ -311,7 +327,7 @@ pub fn draw_guideline_decision(
 
             if draw_glass_button(
                 UiRect::new(center_x + btn_spacing / 2.0, y, btn_w, btn_h),
-                &data.localization.ui.game.guidelines.break_guideline,
+                &break_text,
                 colors::ACCENT_DANGER,
                 true,
             ) {
