@@ -5,6 +5,7 @@ use super::{GameState, PlayerStats};
 use macroquad_toolkit::persistence::{delete_slot, load_from_slot, save_to_slot, slot_exists};
 #[cfg(not(target_arch = "wasm32"))]
 use macroquad_toolkit::persistence::{file_exists, get_app_data_path, load_json, save_json};
+#[cfg(not(target_arch = "wasm32"))]
 use macroquad_toolkit::persistence::{load_from_slot, save_to_slot};
 use serde::{Deserialize, Serialize};
 
