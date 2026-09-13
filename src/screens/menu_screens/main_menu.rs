@@ -30,12 +30,7 @@ pub fn draw_main_menu(
     draw_title_background();
 
     if screen_width() < 700.0 {
-        return draw_narrow_main_menu(
-            delete_armed,
-            save_notice,
-            resume_available,
-            seed_entry,
-        );
+        return draw_narrow_main_menu(delete_armed, save_notice, resume_available, seed_entry);
     }
 
     // Default strings if data missing (shouldn't happen)
@@ -612,13 +607,32 @@ fn draw_narrow_seed_entry(digits: &str) -> UiAction {
     draw_ui_text(
         if digits.is_empty() { "_" } else { digits },
         inner.x,
-        inner.y + 88.0,
+        inner.y + 62.0,
         fonts::SIZE_XL,
         colors::TEXT_PRIMARY,
     );
 
     let button_gap = 6.0;
     let button_w = (inner.w - button_gap * 2.0) / 3.0;
+    let digit_gap = 3.0;
+    let digit_w = (inner.w - digit_gap * 4.0) / 5.0;
+    for (index, digit) in "1234567890".chars().enumerate() {
+        let rect = UiRect::new(
+            inner.x + (index % 5) as f32 * (digit_w + digit_gap),
+            inner.y + 72.0 + (index / 5) as f32 * 23.0,
+            digit_w,
+            20.0,
+        );
+        if crate::ui::draw_glass_button(
+            rect,
+            &digit.to_string(),
+            colors::ACCENT_SKY,
+            digits.len() < 19,
+        ) {
+            return UiAction::SeedDigit(digit);
+        }
+    }
+
     let button_y = panel.bottom() - 40.0;
     let buttons = [
         ("ERASE", UiAction::EraseSeedDigit, colors::ACCENT_WARNING),
