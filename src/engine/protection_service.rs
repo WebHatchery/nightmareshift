@@ -105,6 +105,3 @@ impl ProtectionService {
         })
     }
 }
-
-#[cfg(test)]
-mod tests;

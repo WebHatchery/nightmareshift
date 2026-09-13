@@ -294,9 +294,6 @@ fn default_medium_fuel() -> u32 {
     40
 }
 
-#[cfg(test)]
-mod tests;
-
 fn default_quota_step() -> f32 {
     0.5
 }
@@ -308,6 +305,3 @@ fn default_difficulty_step() -> u32 {
 fn default_normal_relief() -> u32 {
     4
 }
-
-#[cfg(test)]
-mod campaign_tests;

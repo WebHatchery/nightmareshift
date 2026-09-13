@@ -434,9 +434,3 @@ impl RouteService {
         applies_to.eq_ignore_ascii_case(route.label()) || applies_to.eq_ignore_ascii_case("all")
     }
 }
-
-#[cfg(test)]
-mod fare_tests;
-
-#[cfg(test)]
-mod tests;

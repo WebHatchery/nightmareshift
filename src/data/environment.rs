@@ -307,6 +307,3 @@ impl EnvironmentalHazard {
             .unwrap_or(false)
     }
 }
-
-#[cfg(test)]
-mod tests;

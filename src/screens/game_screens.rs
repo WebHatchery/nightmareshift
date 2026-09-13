@@ -13,6 +13,7 @@ pub mod ride_request;
 mod scene;
 pub mod waiting;
 
+pub use dossier::{build, need_label, stage_phrase, DossierLine, DriverContext};
 pub use driving::draw_driving;
 pub use dropoff::draw_dropoff;
 pub use guidelines::draw_guideline_decision;

@@ -74,6 +74,3 @@ impl NightModifierData {
         self.modifiers.last().cloned()
     }
 }
-
-#[cfg(test)]
-mod tests;

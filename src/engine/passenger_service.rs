@@ -301,6 +301,3 @@ impl PassengerService {
         rng.next_f32() < chance
     }
 }
-
-#[cfg(test)]
-mod tests;

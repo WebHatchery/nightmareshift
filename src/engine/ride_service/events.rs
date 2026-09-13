@@ -15,7 +15,7 @@ impl RideService {
     /// almanac knowledge and the matching skill unlocked, and shuffles.
     /// `pub(crate)` so the screenshot harness can seed a real event rather
     /// than hand-building one that could drift from what the game produces.
-    pub(crate) fn generate_mid_ride_event(
+    pub fn generate_mid_ride_event(
         rng: &mut macroquad_toolkit::rng::SeededRng,
         state: &GameState,
         data: &GameData,
@@ -69,7 +69,7 @@ impl RideService {
 
     /// The skill-tree id that grants a passenger trait's ability choice.
     /// `"Night Vision"` and the `night_vision` skill are the same thing.
-    pub(crate) fn trait_skill_id(trait_name: &str) -> String {
+    pub fn trait_skill_id(trait_name: &str) -> String {
         trait_name.to_lowercase().replace(' ', "_")
     }
 
@@ -176,6 +176,3 @@ impl RideService {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

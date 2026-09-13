@@ -129,6 +129,3 @@ impl RuleModificationService {
         lifted
     }
 }
-
-#[cfg(test)]
-mod tests;

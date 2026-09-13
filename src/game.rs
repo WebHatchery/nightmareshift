@@ -5,7 +5,7 @@ mod capture_scenes;
 mod input;
 mod render;
 mod rules;
-mod shift;
+pub mod shift;
 
 use crate::audio::AudioMixer;
 use crate::bot::PlaytestBot;
@@ -20,7 +20,7 @@ const SIMULATION_TICK_SECONDS: f64 = 1.0 / 60.0;
 
 /// What a press on the menu's delete button should do.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum DeleteDecision {
+pub enum DeleteDecision {
     /// Prime the button and wait for a second press.
     Arm,
     /// Confirmed — destroy the save.
@@ -474,7 +474,7 @@ impl Game {
     }
 
     /// How long a primed delete stays primed.
-    const DELETE_CONFIRM_WINDOW: f64 = 5.0;
+    pub const DELETE_CONFIRM_WINDOW: f64 = 5.0;
 
     /// First press arms the delete, second inside the window carries it out.
     ///
@@ -511,7 +511,7 @@ impl Game {
     /// Split out from `arm_or_delete_save` so it can be tested without a
     /// window: the branch that decides whether a save is destroyed is worth
     /// pinning, and `get_time` needs a graphics context.
-    fn delete_decision(armed_until: Option<f64>, now: f64) -> DeleteDecision {
+    pub fn delete_decision(armed_until: Option<f64>, now: f64) -> DeleteDecision {
         match armed_until {
             Some(until) if now < until => DeleteDecision::Erase,
             _ => DeleteDecision::Arm,
@@ -794,6 +794,3 @@ impl Game {
         );
     }
 }
-
-#[cfg(test)]
-mod delete_tests;

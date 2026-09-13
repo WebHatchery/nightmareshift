@@ -79,7 +79,8 @@ impl Persistence {
         load_from_slot(GAME_NAME, SAVE_SLOT)
     }
 
-    fn validate_version(save_data: &SaveData) -> Result<(), String> {
+    /// Reject saves produced by a newer game before any state is loaded.
+    pub fn validate_version(save_data: &SaveData) -> Result<(), String> {
         if save_data.version > SaveData::VERSION {
             return Err("Save file is from a newer version".to_string());
         }
@@ -254,6 +255,3 @@ impl Persistence {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

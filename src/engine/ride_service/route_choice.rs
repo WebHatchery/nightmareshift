@@ -399,7 +399,7 @@ impl RideService {
     }
 
     /// Update passenger stress/state based on route
-    fn update_passenger_state(
+    pub fn update_passenger_state(
         state: &mut GameState,
         route: RouteType,
         current_time: f64,
@@ -775,6 +775,3 @@ impl RideService {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

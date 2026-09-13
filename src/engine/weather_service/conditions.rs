@@ -107,7 +107,7 @@ impl WeatherService {
     }
 
     /// Get weather effects
-    fn get_weather_effects(
+    pub fn get_weather_effects(
         weather_type: WeatherType,
         intensity: WeatherIntensity,
     ) -> Vec<WeatherEffect> {
@@ -211,7 +211,7 @@ impl WeatherService {
     }
 
     /// Calculate visibility percentage
-    fn calculate_visibility(weather_type: WeatherType, intensity: WeatherIntensity) -> u32 {
+    pub fn calculate_visibility(weather_type: WeatherType, intensity: WeatherIntensity) -> u32 {
         match weather_type {
             WeatherType::Fog => match intensity {
                 WeatherIntensity::Light => 60,
@@ -358,6 +358,3 @@ impl WeatherService {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

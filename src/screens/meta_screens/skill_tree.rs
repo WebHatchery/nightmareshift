@@ -63,7 +63,7 @@ fn draw_skill_category_mark(category: &str, x: f32, y: f32, color: Color) {
 /// inert — which is most of why a skills-only run measures barely better than
 /// no progression at all. The studied count is the number of times the
 /// purchase can ever fire.
-pub(crate) fn ability_carriers(
+pub fn ability_carriers(
     skill: &crate::data::Skill,
     passengers: &[crate::data::Passenger],
     player_stats: &PlayerStats,
@@ -530,6 +530,3 @@ pub fn draw_skill_tree(
 
     UiAction::None
 }
-
-#[cfg(test)]
-mod tests;

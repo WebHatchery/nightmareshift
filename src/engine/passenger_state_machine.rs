@@ -203,7 +203,7 @@ impl PassengerStateMachine {
     /// Warning while another stays subtle right up to Critical. Every profile
     /// authors this map and it was read by nothing, so every passenger on the
     /// roster tipped their hand at exactly the same point.
-    fn stage_intensities(
+    pub fn stage_intensities(
         stage: NeedStage,
         authored: Option<&TellIntensityMap>,
     ) -> Vec<TellIntensity> {
@@ -228,7 +228,7 @@ impl PassengerStateMachine {
 
     /// Parse an authored intensity name, ignoring anything unrecognised so a
     /// typo degrades to the default rather than silencing the passenger.
-    fn parse_intensity(name: &str) -> Option<TellIntensity> {
+    pub fn parse_intensity(name: &str) -> Option<TellIntensity> {
         match name.to_lowercase().as_str() {
             "subtle" => Some(TellIntensity::Subtle),
             "moderate" => Some(TellIntensity::Moderate),
@@ -343,6 +343,3 @@ impl PassengerStateMachine {
         (state.stability * 100.0) as u32
     }
 }
-
-#[cfg(test)]
-mod tests;

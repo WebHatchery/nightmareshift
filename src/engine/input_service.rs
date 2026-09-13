@@ -372,6 +372,3 @@ impl InputService {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

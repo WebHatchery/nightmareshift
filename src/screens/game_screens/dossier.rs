@@ -56,7 +56,7 @@ fn candour_label(deception: f32) -> &'static str {
 /// How a need stage reads as a moment to act on, rather than as a label.
 /// Each of these contains `NeedStage::label`, so the almanac and the driving
 /// readout name a passenger's condition the same way. A test holds that.
-fn stage_phrase(stage: NeedStage) -> &'static str {
+pub fn stage_phrase(stage: NeedStage) -> &'static str {
     match stage {
         NeedStage::Calm => "they are still settled",
         NeedStage::Warning => "they turn restless",
@@ -309,6 +309,3 @@ pub fn build(
 
     lines
 }
-
-#[cfg(test)]
-mod tests;

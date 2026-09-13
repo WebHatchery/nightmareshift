@@ -35,6 +35,3 @@ pub struct Location {
     #[serde(default)]
     pub destination_risk: f32,
 }
-
-#[cfg(test)]
-mod tests;

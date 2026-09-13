@@ -96,6 +96,3 @@ pub fn select_epilogue(
         .collect();
     rng.choose(&pool).map(|text| text.to_string())
 }
-
-#[cfg(test)]
-mod tests;

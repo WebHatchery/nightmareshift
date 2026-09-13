@@ -156,6 +156,3 @@ impl WeatherService {
         triggered
     }
 }
-
-#[cfg(test)]
-mod tests;

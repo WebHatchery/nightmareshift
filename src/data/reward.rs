@@ -139,6 +139,3 @@ impl Payout {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

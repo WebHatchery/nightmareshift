@@ -12,7 +12,7 @@ use macroquad_toolkit::audio::load_sound_from_pack_or_file;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Cue {
+pub enum Cue {
     Engine,
     Rain,
     Tension,
@@ -51,7 +51,7 @@ impl Cue {
         }
     }
 
-    fn from_authored(name: &str) -> Self {
+    pub fn from_authored(name: &str) -> Self {
         match name {
             "child_distress" => Self::Tension,
             "distressed_breathing" => Self::Tension,
@@ -183,30 +183,5 @@ impl AudioMixer {
         if let Some(event) = state.pending_audio.take() {
             self.play(Cue::from_authored(&event.cue), effects * 0.72);
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::Cue;
-
-    #[test]
-    fn every_authored_passenger_cue_uses_a_specific_audio_layer() {
-        for cue in [
-            "child_distress",
-            "distressed_breathing",
-            "haunting_hum",
-            "hunger_growl",
-            "labored_breathing",
-            "panicked_plea",
-            "voice_escalation",
-        ] {
-            assert_ne!(Cue::from_authored(cue), Cue::Warning, "{cue} fell through");
-        }
-    }
-
-    #[test]
-    fn unknown_audio_cues_still_degrade_to_the_safe_warning_layer() {
-        assert_eq!(Cue::from_authored("future_cue"), Cue::Warning);
     }
 }

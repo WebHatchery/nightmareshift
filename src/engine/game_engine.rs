@@ -208,7 +208,7 @@ impl GameEngine {
     /// Whether two rules contradict each other. Links are authored one-way —
     /// "Safety First" names "No Eye Contact" but not the reverse — so both
     /// directions are checked.
-    fn rules_conflict(a: &Rule, b: &Rule) -> bool {
+    pub fn rules_conflict(a: &Rule, b: &Rule) -> bool {
         a.id == b.id || a.conflicts_with.contains(&b.id) || b.conflicts_with.contains(&a.id)
     }
 
@@ -308,7 +308,7 @@ impl GameEngine {
     /// soothed just as well by opening a window, and the `exceptionId` every
     /// profile authors decided nothing. The rule must now belong to the
     /// guideline that owns the passenger's own exception.
-    fn passenger_has_exception(
+    pub fn passenger_has_exception(
         rule: &Rule,
         need_state: Option<&PassengerNeedState>,
         guidelines: &[Guideline],
@@ -498,6 +498,3 @@ impl GameEngine {
         (fare + variation).max(Self::MINIMUM_FARE) as u32
     }
 }
-
-#[cfg(test)]
-mod tests;

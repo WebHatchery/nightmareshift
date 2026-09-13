@@ -84,7 +84,7 @@ impl ItemService {
     ///
     /// `itemCategory` is authored per passenger; the keyword scan over the
     /// `supernatural` prose is only a fallback for entries that omit it.
-    fn item_category(passenger: &Passenger) -> &str {
+    pub fn item_category(passenger: &Passenger) -> &str {
         if let Some(category) = passenger.item_category.as_deref() {
             return category;
         }
@@ -431,6 +431,3 @@ impl ItemService {
         });
     }
 }
-
-#[cfg(test)]
-mod tests;

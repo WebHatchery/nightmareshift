@@ -189,7 +189,7 @@ impl GuidelineEngine {
     /// sentence twice. A tell for a dormant breaking-safer exception reads
     /// exactly like the real thing, and acting on it walks into "Breaking X
     /// was dangerous".
-    fn conjure_false_tell(
+    pub fn conjure_false_tell(
         rng: &mut macroquad_toolkit::rng::SeededRng,
         passenger: &Passenger,
         weather: &WeatherCondition,
@@ -239,7 +239,7 @@ impl GuidelineEngine {
     }
 
     /// Check if passenger matches an exception
-    pub(crate) fn passenger_matches_exception(
+    pub fn passenger_matches_exception(
         passenger: &Passenger,
         exception: &GuidelineException,
     ) -> bool {
@@ -260,7 +260,7 @@ impl GuidelineEngine {
     }
 
     /// Check if exception conditions are met
-    pub(crate) fn check_exception_conditions(
+    pub fn check_exception_conditions(
         exception: &GuidelineException,
         weather: &WeatherCondition,
         passenger: &Passenger,
@@ -578,6 +578,3 @@ impl GuidelineEngine {
         false
     }
 }
-
-#[cfg(test)]
-mod tests;

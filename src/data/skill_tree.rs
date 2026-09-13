@@ -116,6 +116,3 @@ impl AlmanacData {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

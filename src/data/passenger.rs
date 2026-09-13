@@ -368,6 +368,3 @@ impl Passenger {
             .unwrap_or(false)
     }
 }
-
-#[cfg(test)]
-mod tests;

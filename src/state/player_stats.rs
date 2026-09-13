@@ -527,7 +527,7 @@ impl PlayerStats {
     }
 
     /// The game's fixed achievement definitions (id, name, description).
-    pub(crate) fn achievement_definitions() -> Vec<Achievement> {
+    pub fn achievement_definitions() -> Vec<Achievement> {
         vec![
             Achievement::new("first_shift", "First Night", "Complete your first shift"),
             Achievement::new("survivor", "Survivor", "Survive 10 shifts"),
@@ -669,6 +669,3 @@ impl PlayerStats {
         newly_unlocked
     }
 }
-
-#[cfg(test)]
-mod tests;

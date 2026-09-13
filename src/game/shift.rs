@@ -22,7 +22,7 @@ use macroquad::prelude::*;
 /// above the shift length and the old expression underflowed -- a panic in a
 /// debug build, and about eight thousand years of logged play time in a release
 /// one.
-fn minutes_on_the_clock(initial_time: u32, time_remaining: u32) -> u32 {
+pub fn minutes_on_the_clock(initial_time: u32, time_remaining: u32) -> u32 {
     initial_time.saturating_sub(time_remaining)
 }
 
@@ -531,6 +531,3 @@ impl Game {
         self.player_stats.lore_fragments += total.lore;
     }
 }
-
-#[cfg(test)]
-mod tests;

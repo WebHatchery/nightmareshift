@@ -311,8 +311,7 @@ impl ItemCatalog {
             .unwrap_or_else(ItemTemplate::keepsake)
     }
 
-    /// Every defined item name.
-    #[cfg(test)]
+    /// Every defined item name, in the catalog's storage order.
     pub fn names(&self) -> Vec<String> {
         self.templates.keys().cloned().collect()
     }
@@ -410,6 +409,3 @@ impl ItemTemplate {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

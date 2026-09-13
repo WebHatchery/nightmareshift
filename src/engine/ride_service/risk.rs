@@ -107,6 +107,3 @@ impl RideService {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

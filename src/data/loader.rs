@@ -331,12 +331,9 @@ pub fn try_load_constants() -> Result<ConstantsData, String> {
         .map_err(|e| format!("constants.json: {e}"))
 }
 
-/// Load constants from embedded JSON.
-///
-/// Panics on a parse failure, which is the right behavior for the tests
-/// that call it — the production path is `GameData::load`, which carries
-/// the error to a screen instead.
-#[cfg(test)]
+/// Load constants from embedded JSON, panicking if the embedded asset is
+/// malformed. The production loading path uses [`try_load_constants`] so it
+/// can carry the error to the loading screen.
 pub fn load_constants() -> ConstantsData {
     try_load_constants().expect("constants.json parses")
 }
@@ -458,9 +455,9 @@ pub fn try_load_localization_for(code: &str) -> Result<Localization, String> {
     serde_json::from_value(value).map_err(|e| format!("localization/{code} shape: {e}"))
 }
 
-/// Panicking wrapper for the tests; production goes through
-/// `GameData::load`, which shows the error instead.
-#[cfg(test)]
+/// Load the default English locale, panicking if the embedded schema is
+/// malformed. The production loading path uses [`try_load_localization`] so
+/// it can carry the error to the loading screen.
 pub fn load_localization() -> Localization {
     try_load_localization().expect("localization/en.json parses")
 }
@@ -474,7 +471,7 @@ pub fn load_localization() -> Localization {
 /// Only strings that actually lost a character are trimmed, so the gap a
 /// stripped prefix leaves does not show as a stray indent while deliberate
 /// spacing — the leaderboard detail line is indented on purpose — survives.
-fn strip_undrawable_glyphs(value: &mut serde_json::Value) {
+pub fn strip_undrawable_glyphs(value: &mut serde_json::Value) {
     match value {
         serde_json::Value::String(text) => {
             let cleaned: String = text
@@ -515,6 +512,3 @@ fn merge_json(base: &mut serde_json::Value, overlay: serde_json::Value) {
         _ => *base = overlay,
     }
 }
-
-#[cfg(test)]
-mod tests;

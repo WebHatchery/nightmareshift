@@ -105,6 +105,3 @@ impl EventTemplate {
         self.routes.is_empty() || self.routes.contains(&route)
     }
 }
-
-#[cfg(test)]
-mod tests;

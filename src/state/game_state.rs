@@ -738,15 +738,3 @@ impl GameState {
         (base + ride_bonus + time_bonus).saturating_sub(violation_penalty)
     }
 }
-
-#[cfg(test)]
-mod trust_tests;
-
-#[cfg(test)]
-mod stage_tests;
-
-#[cfg(test)]
-mod reputation_tests;
-
-#[cfg(test)]
-mod score_tests;
