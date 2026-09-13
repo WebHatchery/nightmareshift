@@ -29,6 +29,15 @@ pub fn draw_main_menu(
 ) -> UiAction {
     draw_title_background();
 
+    if screen_width() < 700.0 {
+        return draw_narrow_main_menu(
+            delete_armed,
+            save_notice,
+            resume_available,
+            seed_entry,
+        );
+    }
+
     // Default strings if data missing (shouldn't happen)
     let title_text = if let Some(d) = game_data {
         &d.localization.ui.main_menu.title
@@ -480,5 +489,159 @@ pub fn draw_main_menu(
         );
     }
 
+    UiAction::None
+}
+
+fn draw_narrow_main_menu(
+    delete_armed: bool,
+    save_notice: Option<&str>,
+    resume_available: bool,
+    seed_entry: Option<&str>,
+) -> UiAction {
+    let title_color = colors::TEXT_PRIMARY;
+    draw_ui_text("NIGHTMARE", 16.0, 28.0, 22.0, title_color);
+    draw_ui_text("SHIFT", 16.0, 50.0, 22.0, title_color);
+    draw_small_caps(
+        "SURVIVE THE NIGHT",
+        16.0,
+        66.0,
+        fonts::SIZE_XS,
+        colors::CAB_YELLOW,
+    );
+
+    if let Some(digits) = seed_entry {
+        return draw_narrow_seed_entry(digits);
+    }
+
+    let mut commands = vec![
+        ("START", UiAction::StartGame, colors::CAB_YELLOW),
+        ("DAILY", UiAction::StartDailyRun, colors::ACCENT_SKY),
+        ("SEEDED", UiAction::OpenSeedEntry, colors::TEXT_SECONDARY),
+    ];
+    if resume_available {
+        commands.insert(1, ("RESUME", UiAction::ResumeRun, colors::FUEL_GOOD));
+    }
+    commands.extend([
+        ("SKILLS", UiAction::OpenSkillTree, colors::TEXT_SECONDARY),
+        ("ALMANAC", UiAction::OpenAlmanac, colors::TEXT_SECONDARY),
+        ("SCORES", UiAction::OpenLeaderboard, colors::TEXT_SECONDARY),
+        ("HELP", UiAction::OpenHelpOptions, colors::ACCENT_SKY),
+        ("CREDITS", UiAction::OpenCredits, colors::TEXT_SECONDARY),
+    ]);
+    if Persistence::save_exists() {
+        let label = if delete_armed { "CONFIRM" } else { "DELETE" };
+        commands.push((label, UiAction::DeleteSave, colors::ACCENT_DANGER));
+    }
+
+    let columns = 3;
+    let gap = 4.0;
+    let top = 72.0;
+    let button_w =
+        ((screen_width() - 32.0 - gap * (columns - 1) as f32) / columns as f32).max(70.0);
+    let rows = commands.len().div_ceil(columns);
+    let button_h =
+        ((screen_height() - top - 12.0 - gap * (rows - 1) as f32) / rows as f32).clamp(22.0, 30.0);
+    let total_w = button_w * columns as f32 + gap * (columns - 1) as f32;
+    let start_x = (screen_width() - total_w) / 2.0;
+    for (index, (label, action, accent)) in commands.into_iter().enumerate() {
+        let column = index % columns;
+        let row = index / columns;
+        let rect = UiRect::new(
+            start_x + column as f32 * (button_w + gap),
+            top + row as f32 * (button_h + gap),
+            button_w,
+            button_h,
+        );
+        if draw_compact_menu_command(rect, label, accent) {
+            return action;
+        }
+    }
+
+    if let Some(notice) = save_notice {
+        draw_small_caps(
+            notice,
+            16.0,
+            screen_height() - 4.0,
+            fonts::SIZE_XS,
+            colors::FUEL_CRITICAL,
+        );
+    }
+    UiAction::None
+}
+
+fn draw_compact_menu_command(rect: UiRect, label: &str, accent: Color) -> bool {
+    let clicked = crate::ui::draw_glass_button(rect, "", accent, true);
+    let dims = crate::ui::measure_ui_text(label, None, fonts::SIZE_XS as u16, 1.0);
+    draw_small_caps(
+        label,
+        rect.x + (rect.w - dims.width) / 2.0,
+        rect.y + rect.h * 0.64,
+        fonts::SIZE_XS,
+        colors::TEXT_PRIMARY,
+    );
+    clicked
+}
+
+fn draw_narrow_seed_entry(digits: &str) -> UiAction {
+    draw_modal_scrim();
+    let panel = UiRect::new(
+        12.0,
+        12.0,
+        (screen_width() - 24.0).max(260.0),
+        (screen_height() - 24.0).max(140.0),
+    );
+    draw_glass_panel(panel, colors::ACCENT_SKY);
+    let inner = panel.inset(14.0);
+    draw_small_caps(
+        "SEEDED RUN",
+        inner.x,
+        inner.y + 12.0,
+        fonts::SIZE_SM,
+        colors::ACCENT_SKY,
+    );
+    draw_wrapped_text(
+        "Type a night number. The same number deals the same night.",
+        inner.x,
+        inner.y + 34.0,
+        inner.w,
+        fonts::SIZE_XS,
+        12.0,
+        colors::TEXT_SECONDARY,
+        2,
+    );
+    draw_ui_text(
+        if digits.is_empty() { "_" } else { digits },
+        inner.x,
+        inner.y + 88.0,
+        fonts::SIZE_XL,
+        colors::TEXT_PRIMARY,
+    );
+
+    let button_gap = 6.0;
+    let button_w = (inner.w - button_gap * 2.0) / 3.0;
+    let button_y = panel.bottom() - 40.0;
+    let buttons = [
+        ("ERASE", UiAction::EraseSeedDigit, colors::ACCENT_WARNING),
+        (
+            "START",
+            digits
+                .parse::<u64>()
+                .ok()
+                .map_or(UiAction::None, UiAction::StartSeededRun),
+            colors::FUEL_GOOD,
+        ),
+        ("CANCEL", UiAction::CancelSeedEntry, colors::ACCENT_DANGER),
+    ];
+    for (index, (label, action, color)) in buttons.into_iter().enumerate() {
+        let rect = UiRect::new(
+            inner.x + index as f32 * (button_w + button_gap),
+            button_y,
+            button_w,
+            28.0,
+        );
+        if crate::ui::draw_glass_button(rect, label, color, action != UiAction::None) {
+            return action;
+        }
+    }
     UiAction::None
 }
