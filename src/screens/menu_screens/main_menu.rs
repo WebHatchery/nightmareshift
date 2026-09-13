@@ -30,7 +30,13 @@ pub fn draw_main_menu(
     draw_title_background();
 
     if screen_width() < 980.0 || screen_height() < 560.0 {
-        return draw_narrow_main_menu(delete_armed, save_notice, resume_available, seed_entry);
+        return draw_narrow_main_menu(
+            game_data,
+            delete_armed,
+            save_notice,
+            resume_available,
+            seed_entry,
+        );
     }
 
     // Default strings if data missing (shouldn't happen)
@@ -488,16 +494,36 @@ pub fn draw_main_menu(
 }
 
 fn draw_narrow_main_menu(
+    game_data: Option<&GameData>,
     delete_armed: bool,
     save_notice: Option<&str>,
     resume_available: bool,
     seed_entry: Option<&str>,
 ) -> UiAction {
-    let title_color = colors::TEXT_PRIMARY;
-    draw_ui_text("NIGHTMARE", 16.0, 28.0, 22.0, title_color);
-    draw_ui_text("SHIFT", 16.0, 50.0, 22.0, title_color);
+    let (title, subtitle) = game_data
+        .map(|data| {
+            (
+                data.localization.ui.main_menu.title.as_str(),
+                data.localization.ui.main_menu.subtitle.as_str(),
+            )
+        })
+        .unwrap_or(("NIGHTMARE SHIFT", "SURVIVE THE NIGHT"));
+    draw_wrapped_text(
+        title,
+        16.0,
+        28.0,
+        screen_width() - 32.0,
+        22.0,
+        22.0,
+        colors::TEXT_PRIMARY,
+        2,
+    );
     draw_small_caps(
-        "SURVIVE THE NIGHT",
+        &macroquad_toolkit::ui::truncate_text_to_width(
+            subtitle,
+            screen_width() - 32.0,
+            fonts::SIZE_XS,
+        ),
         16.0,
         66.0,
         fonts::SIZE_XS,
