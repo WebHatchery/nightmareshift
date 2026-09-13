@@ -88,6 +88,25 @@ jobs:
       - name: Run tests
         run: cargo test --manifest-path Cargo.toml --all-features
 
+      - name: Install playtest display dependencies
+        run: sudo apt-get install -y --no-install-recommends xvfb
+
+      - name: Run deterministic playtest bot smoke
+        run: |
+          timeout --signal=TERM 180s xvfb-run -a -s "-screen 0 1280x720x24" cargo run --release -- --bot --bot-once --bot-delay-ms=1 --bot-fresh-stats --seed=424242 > playtest-bot.log 2>&1
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          MESA_LOADER_DRIVER_OVERRIDE: llvmpipe
+          SDL_AUDIODRIVER: dummy
+
+      - name: Upload playtest bot failure log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playtest-bot-log
+          path: game/playtest-bot.log
+          if-no-files-found: warn
+
       - name: Build WebGL release
         run: cargo build --manifest-path Cargo.toml --release --target wasm32-unknown-unknown
         env:
