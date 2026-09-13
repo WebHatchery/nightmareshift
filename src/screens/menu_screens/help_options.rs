@@ -17,6 +17,9 @@ fn option_button(rect: UiRect, key: &str, label: &str, value: &str) -> bool {
 /// the pause menu without maintaining two copies.
 pub fn draw_help_options(stats: &PlayerStats, tutorial_active: bool) -> UiAction {
     draw_noir_city_background();
+    if screen_width() < 980.0 || screen_height() < 560.0 {
+        return draw_narrow_help_options(stats, tutorial_active);
+    }
     let margin = (screen_width() * 0.04).clamp(22.0, 64.0);
     let top = 34.0;
     let bottom = 68.0;
@@ -288,4 +291,190 @@ pub fn draw_help_options(stats: &PlayerStats, tutorial_active: bool) -> UiAction
         return UiAction::ReturnToMenu;
     }
     UiAction::None
+}
+
+fn draw_narrow_help_options(stats: &PlayerStats, tutorial_active: bool) -> UiAction {
+    let panel = UiRect::new(10.0, 10.0, screen_width() - 20.0, screen_height() - 20.0);
+    draw_glass_panel(panel, colors::ACCENT_SKY);
+    let inner = panel.inset(8.0);
+    draw_ui_text(
+        if tutorial_active {
+            "TUTORIAL"
+        } else {
+            "OPTIONS"
+        },
+        inner.x,
+        inner.y + 16.0,
+        fonts::SIZE_LG,
+        colors::ACCENT_SKY,
+    );
+    draw_small_caps(
+        "TAP A SETTING TO CHANGE IT",
+        inner.x,
+        inner.y + 31.0,
+        fonts::SIZE_XS,
+        colors::TEXT_SECONDARY,
+    );
+    if draw_glass_button(
+        UiRect::new(panel.right() - 74.0, inner.y, 66.0, 20.0),
+        "BACK",
+        colors::CAB_YELLOW,
+        true,
+    ) {
+        return UiAction::ReturnToMenu;
+    }
+
+    let settings = &stats.accessibility;
+    let rows = [
+        (
+            "T",
+            "TEXT",
+            format!("{}%", settings.text_scale_percent),
+            UiAction::CycleTextScale,
+        ),
+        (
+            "H",
+            "CONTRAST",
+            on_off(settings.high_contrast),
+            UiAction::ToggleHighContrast,
+        ),
+        (
+            "R",
+            "MOTION",
+            on_off(settings.reduced_motion),
+            UiAction::ToggleReducedMotion,
+        ),
+        (
+            "B",
+            "BRIGHT",
+            format!("{}%", settings.brightness_percent),
+            UiAction::CycleBrightness,
+        ),
+        (
+            "C",
+            "CAPTION",
+            on_off(settings.captions),
+            UiAction::ToggleCaptions,
+        ),
+        (
+            "F",
+            "FULL",
+            on_off(settings.fullscreen),
+            UiAction::ToggleFullscreen,
+        ),
+        (
+            "1",
+            "MASTER",
+            format!("{}%", settings.master_volume),
+            UiAction::CycleMasterVolume,
+        ),
+        (
+            "2",
+            "AMBIENT",
+            format!("{}%", settings.ambience_volume),
+            UiAction::CycleAmbienceVolume,
+        ),
+        (
+            "3",
+            "MUSIC",
+            format!("{}%", settings.music_volume),
+            UiAction::CycleMusicVolume,
+        ),
+        (
+            "4",
+            "FX",
+            format!("{}%", settings.effects_volume),
+            UiAction::CycleEffectsVolume,
+        ),
+        (
+            "A",
+            "ACCEPT",
+            settings.key_bindings.accept.clone(),
+            UiAction::CycleAcceptBinding,
+        ),
+        (
+            "D",
+            "DECLINE",
+            settings.key_bindings.decline.clone(),
+            UiAction::CycleDeclineBinding,
+        ),
+        (
+            "F",
+            "FOLLOW",
+            settings.key_bindings.follow.clone(),
+            UiAction::CycleFollowBinding,
+        ),
+        (
+            "B",
+            "BREAK",
+            settings.key_bindings.break_guideline.clone(),
+            UiAction::CycleBreakBinding,
+        ),
+        (
+            "P",
+            "PAUSE",
+            settings.key_bindings.pause.clone(),
+            UiAction::CyclePauseBinding,
+        ),
+        (
+            "L",
+            "LANG",
+            if settings.language.eq_ignore_ascii_case("es") {
+                "ES".to_string()
+            } else {
+                "EN".to_string()
+            },
+            UiAction::CycleLanguage,
+        ),
+        ("X", "EXPORT", "SAVE".to_string(), UiAction::ExportSave),
+        ("M", "IMPORT", "SAVE".to_string(), UiAction::ImportSave),
+    ];
+    let columns = 3;
+    let gap = 3.0;
+    let button_w = (inner.w - gap * (columns - 1) as f32) / columns as f32;
+    let button_h = 19.0;
+    for (index, (key, label, value, action)) in rows.into_iter().enumerate() {
+        let column = index % columns;
+        let row = index / columns;
+        let rect = UiRect::new(
+            inner.x + column as f32 * (button_w + gap),
+            inner.y + 40.0 + row as f32 * (button_h + gap),
+            button_w,
+            button_h,
+        );
+        if draw_compact_option(rect, key, &label, &value) {
+            return action;
+        }
+    }
+    if !settings.key_bindings.conflicts().is_empty() {
+        draw_small_caps(
+            "BINDING CONFLICT",
+            inner.x,
+            panel.bottom() - 4.0,
+            fonts::SIZE_XS,
+            colors::FUEL_CRITICAL,
+        );
+    }
+    UiAction::None
+}
+
+fn on_off(value: bool) -> String {
+    if value { "ON" } else { "OFF" }.to_string()
+}
+
+fn draw_compact_option(rect: UiRect, key: &str, label: &str, value: &str) -> bool {
+    let clicked = draw_glass_button(rect, "", colors::ACCENT_SKY, true);
+    let text = macroquad_toolkit::ui::truncate_text_to_width(
+        &format!("{key} {label} {value}"),
+        rect.w - 6.0,
+        fonts::SIZE_XS,
+    );
+    draw_small_caps(
+        &text,
+        rect.x + 3.0,
+        rect.y + 13.0,
+        fonts::SIZE_XS,
+        colors::TEXT_PRIMARY,
+    );
+    clicked
 }
