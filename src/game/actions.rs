@@ -29,6 +29,7 @@ impl Game {
                 | UiAction::Continue
                 | UiAction::FollowGuideline
                 | UiAction::BreakGuideline
+                | UiAction::OpenCredits
         );
         if !matches!(action, UiAction::None) {
             self.audio
@@ -151,6 +152,7 @@ impl Game {
                     || self.screen == Screen::SkillTree
                     || self.screen == Screen::Almanac
                     || self.screen == Screen::Leaderboard
+                    || self.screen == Screen::Credits
                     || self.screen == Screen::Briefing
                     || (self.screen == Screen::Game && self.overlays.pause)
                 {
@@ -332,6 +334,11 @@ impl Game {
                     Screen::MainMenu
                 };
                 self.screen = Screen::HelpOptions;
+            }
+            UiAction::OpenCredits => {
+                if self.screen == Screen::MainMenu {
+                    self.change_screen(Screen::Credits);
+                }
             }
             UiAction::CycleTextScale => {
                 self.player_stats.accessibility.cycle_text_scale();

@@ -93,6 +93,7 @@ impl Game {
             Screen::HelpOptions => {
                 menu_screens::draw_help_options(&self.player_stats, self.tutorial_active)
             }
+            Screen::Credits => menu_screens::draw_credits(),
         };
 
         if self.screen == Screen::Game {

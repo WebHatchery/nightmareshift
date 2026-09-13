@@ -48,6 +48,8 @@ pub enum UiAction {
     OpenSeedEntry,
     /// Begin a run on today's shared daily seed.
     StartDailyRun,
+    /// Open the contributor and asset credits screen.
+    OpenCredits,
     /// Begin a run on a player-entered seed.
     StartSeededRun(u64),
     /// Append one digit to the open seed-entry dialog.

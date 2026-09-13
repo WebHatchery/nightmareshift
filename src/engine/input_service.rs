@@ -169,6 +169,9 @@ impl InputService {
             {
                 actions.push(UiAction::ReturnToMenu);
             }
+            Screen::Credits if is_key_pressed(KeyCode::Escape) => {
+                actions.push(UiAction::ReturnToMenu);
+            }
             Screen::HelpOptions => {
                 if is_key_pressed(KeyCode::Escape) {
                     actions.push(UiAction::ReturnToMenu);
@@ -296,7 +299,11 @@ impl InputService {
                     actions.push(UiAction::ReturnToMenu);
                 }
             }
-            Screen::SkillTree | Screen::Almanac | Screen::Leaderboard | Screen::HelpOptions
+            Screen::SkillTree
+            | Screen::Almanac
+            | Screen::Leaderboard
+            | Screen::HelpOptions
+            | Screen::Credits
                 if frame.cancel =>
             {
                 actions.push(UiAction::ReturnToMenu);

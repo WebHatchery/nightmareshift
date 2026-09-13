@@ -1,7 +1,7 @@
 //! Screen rendering modules.
 //!
 //! Screens are separated by purpose to keep file sizes manageable.
-//! - `menu_screens`: Loading, Main Menu, Briefing, Game Over, Success
+//! - `menu_screens`: Loading, Main Menu, Briefing, Credits, Game Over, Success
 //! - `game_screens`: Waiting, Driving, Interaction, DropOff, Guidelines
 //! - `meta_screens`: Skill Tree, Almanac, Leaderboard
 
@@ -15,6 +15,7 @@ pub enum Screen {
     Loading,
     MainMenu,
     Briefing,
+    Credits,
     Game,
     GameOver,
     Success,

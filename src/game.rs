@@ -541,7 +541,8 @@ impl Game {
             | Screen::SkillTree
             | Screen::Almanac
             | Screen::Leaderboard
-            | Screen::HelpOptions => self.game_state.game_phase,
+            | Screen::HelpOptions
+            | Screen::Credits => self.game_state.game_phase,
         };
         if new_screen != Screen::Game {
             self.particles.clear();

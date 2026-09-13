@@ -210,7 +210,7 @@ pub fn draw_main_menu(
         let menu_w = (screen_width() * 0.36).clamp(230.0, 380.0);
         let menu_h = (62.0 * menu_scale).clamp(38.0, 62.0);
         let gap = (12.0 * menu_scale).clamp(6.0, 12.0);
-        let menu_items = 7.0
+        let menu_items = 8.0
             + if Persistence::save_exists() { 1.0 } else { 0.0 }
             + if resume_available { 1.0 } else { 0.0 };
         let total_menu_h = menu_h * menu_items + gap * (menu_items - 1.0);
@@ -392,6 +392,22 @@ pub fn draw_main_menu(
             return UiAction::OpenHelpOptions;
         }
 
+        if draw_menu_command(
+            UiRect::new(
+                menu_x,
+                menu_y + (menu_h + gap) * (7.0 + menu_offset),
+                menu_w,
+                menu_h,
+            ),
+            "book",
+            "Credits",
+            "People, tools, and the midnight city",
+            colors::TEXT_SECONDARY,
+            menu_scale,
+        ) {
+            return UiAction::OpenCredits;
+        }
+
         // Deleting a save was one click from the menu, and it takes the bank
         // balance, every lore fragment, every almanac level, every unlocked
         // skill, the leaderboard and the achievements with it. The first
@@ -410,7 +426,7 @@ pub fn draw_main_menu(
             if draw_menu_command(
                 UiRect::new(
                     menu_x,
-                    menu_y + (menu_h + gap) * (7.0 + menu_offset),
+                    menu_y + (menu_h + gap) * (8.0 + menu_offset),
                     menu_w,
                     menu_h,
                 ),
