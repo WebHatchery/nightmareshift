@@ -1,0 +1,173 @@
+{
+  "meta": {
+    "language": "Español",
+    "code": "es",
+    "version": "1.0.0"
+  },
+  "ui": {
+    "common": {
+      "backButton": "Volver al menu (ESC)",
+      "continue": "Continuar",
+      "continueSpace": "Continuar (ESPACIO)",
+      "acceptSpace": "Aceptar (ESPACIO)",
+      "declineKey": "Rechazar (D)",
+      "loading": "Cargando...",
+      "tryAgain": "Intentar de nuevo (ESPACIO)"
+    },
+    "mainMenu": {
+      "title": "TURNO DE PESADILLA",
+      "subtitle": "Sobrevive la noche. Sigue las reglas. Confia en tus instintos.",
+      "startSpace": "Empezar turno (ESPACIO)",
+      "stats": "Turnos: {} | Ganancias: ${} | Viajes: {} | Infracciones: {}",
+      "achievements": "Logros: {}/{}"
+    },
+    "briefing": {
+      "title": "INFORME DEL TURNO",
+      "rulesTitle": "Reglas de esta noche:",
+      "weatherTitle": "Clima:",
+      "beginSpace": "Empezar turno (ESPACIO)",
+      "nightLabel": "NOCHE {} DE {}",
+      "premise": [
+        "Primera noche en el turno nocturno. Central jura que las reglas no son sugerencias.",
+        "El conductor anterior no termino la semana. Ya empiezas a entender por que.",
+        "A mitad del camino. Los habituales son mas extranos, y tu tambien.",
+        "La ciudad se siente mas delgada esta noche, como si algo mirara el taximetro.",
+        "Ultima noche. Llega al amanecer y el turno sera tuyo para abandonarlo."
+      ]
+    },
+    "meta": {
+      "skillTree": {
+        "title": "ARBOL DE HABILIDADES",
+        "button": "Arbol de habilidades (Banco: ${})",
+        "bankBalance": "Saldo del banco: ${}",
+        "categories": {
+          "survival": "Supervivencia",
+          "occult": "Ocultismo",
+          "efficiency": "Eficiencia"
+        },
+        "unlocked": "DESBLOQUEADA",
+        "purchase": "Comprar"
+      },
+      "almanac": {
+        "title": "ALMANAQUE",
+        "button": "Almanaque (Saber: {})",
+        "fragments": "Fragmentos de saber: {}",
+        "unknownLevel": "Desconocido",
+        "upgradeCost": "Mejorar (cuesta {} fragmentos)"
+      },
+      "leaderboard": {
+        "title": "CLASIFICACION Y LOGROS",
+        "button": "Clasificacion",
+        "topRuns": "Las 10 mejores partidas",
+        "noRuns": "Aun no hay turnos completos. Termina uno para ver tus puntuaciones.",
+        "achievements": "Logros",
+        "scoreEntry": "#{} Puntuacion: {}",
+        "details": "  {} pasajeros | Dificultad {} | {} infracciones | {}"
+      }
+    },
+    "game": {
+      "statusBar": {
+        "fuel": "Combustible: {}%",
+        "earnings": "Ganancias: ${}",
+        "time": "Hora: {}:{:02}",
+        "rides": "{} viajes"
+      },
+      "waiting": {
+        "looking": "Buscando pasajeros...",
+        "fuelLabel": "Combustible: {:.0}% - {}",
+        "fuelStatus": {
+          "critical": "CRITICO",
+          "low": "BAJO",
+          "medium": "MEDIO",
+          "good": "BIEN"
+        },
+        "inventoryHint": "Pulsa I para el inventario ({} objetos)",
+        "refuelTitle": "Opciones de combustible:",
+        "fullTank": "Tanque lleno (${})",
+        "partial": "+25% (${})",
+        "findPassenger": "Buscar pasajero (ESPACIO)"
+      },
+      "driving": {
+        "pickup": "Conduciendo al punto de recogida...",
+        "destination": "Conduciendo al destino...",
+        "blocked": "BLOQUEADO",
+        "noFuel": "No hay suficiente combustible",
+        "noTime": "No hay suficiente tiempo",
+        "nightWarning": "Conduccion nocturna",
+        "weatherWarning": "Clima: {}",
+        "routes": {
+          "normal": "Ruta normal",
+          "normalDesc": "Estable: -4 necesidad, poco combustible",
+          "shortcut": "Atajo",
+          "shortcutDesc": "Mas rapido, mas peligroso",
+          "scenic": "Ruta panoramica",
+          "scenicDesc": "+30% de tarifa",
+          "police": "Ruta policial",
+          "policeDesc": "La opcion mas segura"
+        }
+      },
+      "inventory": {
+        "title": "INVENTARIO",
+        "hint": "Pulsa I para cerrar",
+        "count": "Objetos: {}",
+        "empty": "Aun no has recogido objetos.",
+        "source": "de {}",
+        "clickToUse": "[Pulsa para usar]",
+        "more": "..."
+      },
+      "rules": {
+        "title": "REGLAS ACTUALES",
+        "hint": "Pulsa R para cerrar"
+      },
+      "guidelines": {
+        "title": "DECISION DE LA GUIA",
+        "timer": "Tiempo: {:.1}s",
+        "label": "Guia:",
+        "tellsLabel": "Senales detectadas:",
+        "noTells": "No se detectan senales claras",
+        "follow": "Seguir la guia (F)",
+        "break": "Romper la guia (B)",
+        "intensity": {
+          "subtle": "Sutil",
+          "moderate": "Moderada",
+          "obvious": "Obvia"
+        }
+      },
+      "trade": {
+        "title": "OFERTA DE INTERCAMBIO",
+        "wantsToTrade": "{} quiere intercambiar",
+        "offering": "Ofrece: {}",
+        "anyItem": "Por cualquier objeto de tu inventario",
+        "select": "Elige un objeto para intercambiar:",
+        "empty": "No tienes nada para intercambiar",
+        "decline": "Rechazar intercambio"
+      },
+      "completion": {
+        "title": "Viaje completo",
+        "fare": "Tarifa ganada: ${}",
+        "items": "Objetos recibidos:",
+        "backstory": "Historia desbloqueada: {}"
+      }
+    },
+    "gameOver": {
+      "title": "FIN DEL JUEGO",
+      "stats": "Ganancias: ${} | Viajes: {} | Puntuacion: {}"
+    },
+    "success": {
+      "totalEarnings": "Ganancias totales: ${}",
+      "rides": "Viajes completos: {}",
+      "bonus": "Bono de supervivencia: +${}",
+      "finalScore": "Puntuacion final: {}",
+      "nightTitle": "NOCHE {} SOBREVIVIDA",
+      "nightSubtitle": "{} mas antes de que salga el sol.",
+      "runTitle": "HAS SOBREVIVIDO",
+      "runSubtitle": "Cada noche resistida. Por fin amanece.",
+      "nextNight": "Siguiente noche (ESPACIO)"
+    }
+  },
+  "system": {
+    "loading": "Cargando...",
+    "saving": "Guardando...",
+    "error": "Ha ocurrido un error"
+  }
+}

@@ -217,6 +217,16 @@ pub fn draw_help_options(stats: &PlayerStats, tutorial_active: bool) -> UiAction
             UiAction::CyclePauseBinding,
         ),
         (
+            "L",
+            "Language",
+            if settings.language.eq_ignore_ascii_case("es") {
+                "ES".to_string()
+            } else {
+                "EN".to_string()
+            },
+            UiAction::CycleLanguage,
+        ),
+        (
             "X",
             "Export backup",
             "Keep a restore copy".to_string(),

@@ -231,6 +231,14 @@ fn stripping_preserves_the_words_and_deliberate_spacing() {
 }
 
 #[test]
+fn spanish_locale_keeps_accented_font_coverage() {
+    let localization = try_load_localization_for("es").expect("Spanish locale parses");
+    assert_eq!(localization.meta.code, "es");
+    assert_eq!(localization.meta.language, "Español");
+    assert!(localization.ui.main_menu.subtitle.contains("Confia"));
+}
+
+#[test]
 fn embedded_game_data_passes_semantic_validation() {
     let data = GameData::load().expect("structural game data should load");
     assert!(

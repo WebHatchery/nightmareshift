@@ -388,6 +388,17 @@ impl Game {
                     cycle_volume(self.player_stats.accessibility.effects_volume);
                 self.save_stats();
             }
+            UiAction::CycleLanguage => {
+                self.player_stats.accessibility.cycle_language();
+                let code = self.player_stats.accessibility.language.clone();
+                if let Some(data) = self.game_data.as_mut() {
+                    if let Ok(localization) = crate::data::loader::try_load_localization_for(&code)
+                    {
+                        data.localization = localization;
+                    }
+                }
+                self.save_stats();
+            }
             UiAction::DeleteSave => self.arm_or_delete_save(),
             UiAction::PurchaseSkill(skill_id) => {
                 if let Some(ref data) = self.game_data {

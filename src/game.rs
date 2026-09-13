@@ -145,7 +145,7 @@ impl Game {
         // The data is embedded at compile time, so a failure here is a
         // build defect — but the window still deserves to say so rather
         // than panic to a black canvas.
-        let (game_data, data_error) = match GameData::load() {
+        let (mut game_data, data_error) = match GameData::load() {
             Ok(data) => (Some(data), None),
             Err(error) => {
                 eprintln!("Game data failed to load: {error}");
@@ -158,6 +158,13 @@ impl Game {
         let (mut player_stats, save_notice, save_allowed, saved_run) =
             Persistence::load_or_quarantine();
         player_stats.init_achievements();
+        if let Some(data) = game_data.as_mut() {
+            if let Ok(localization) =
+                crate::data::loader::try_load_localization_for(&player_stats.accessibility.language)
+            {
+                data.localization = localization;
+            }
+        }
         let playtest_bot = PlaytestBot::from_launch_args();
         if let Some(bot) = &playtest_bot {
             // A fresh-stats measurement never touches the real save: it did

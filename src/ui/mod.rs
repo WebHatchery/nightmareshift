@@ -29,6 +29,7 @@ pub enum UiAction {
     CycleFollowBinding,
     CycleBreakBinding,
     CyclePauseBinding,
+    CycleLanguage,
     AcceptRide,
     DeclineRide,
     SelectRoute(usize),

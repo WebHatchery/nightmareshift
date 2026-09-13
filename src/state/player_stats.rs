@@ -124,6 +124,8 @@ pub struct AccessibilitySettings {
     pub effects_volume: u8,
     #[serde(default)]
     pub key_bindings: KeyBindings,
+    #[serde(default = "default_language")]
+    pub language: String,
 }
 
 impl Default for AccessibilitySettings {
@@ -140,6 +142,7 @@ impl Default for AccessibilitySettings {
             music_volume: default_volume(),
             effects_volume: default_volume(),
             key_bindings: KeyBindings::default(),
+            language: default_language(),
         }
     }
 }
@@ -158,6 +161,10 @@ fn default_volume() -> u8 {
 
 fn default_true() -> bool {
     true
+}
+
+fn default_language() -> String {
+    "en".to_string()
 }
 
 impl AccessibilitySettings {
@@ -187,6 +194,15 @@ impl AccessibilitySettings {
             26..=50 => 80,
             51..=80 => 100,
             _ => 0,
+        };
+    }
+
+    /// Toggle between the shipped English and Spanish presentation layers.
+    pub fn cycle_language(&mut self) {
+        self.language = if self.language.eq_ignore_ascii_case("es") {
+            "en".to_string()
+        } else {
+            "es".to_string()
         };
     }
 }

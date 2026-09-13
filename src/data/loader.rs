@@ -440,10 +440,22 @@ pub fn load_rewards() -> RewardData {
 /// remembering. Cleaning them out of the text once, here, means no caller can
 /// forget — and the emoji stay in the JSON for a font that can draw them.
 pub fn try_load_localization() -> Result<Localization, String> {
+    try_load_localization_for("en")
+}
+
+/// Load a supported locale by overlaying its authored strings on the complete
+/// English schema. Partial locale files can therefore add translated content
+/// without making a missing key crash the loading screen.
+pub fn try_load_localization_for(code: &str) -> Result<Localization, String> {
     let mut value: serde_json::Value =
         macroquad_toolkit::include_json!("../../assets/localization/en.json")?;
+    if code.eq_ignore_ascii_case("es") {
+        let overlay: serde_json::Value =
+            macroquad_toolkit::include_json!("../../assets/localization/es.json")?;
+        merge_json(&mut value, overlay);
+    }
     strip_undrawable_glyphs(&mut value);
-    serde_json::from_value(value).map_err(|e| format!("localization/en.json shape: {e}"))
+    serde_json::from_value(value).map_err(|e| format!("localization/{code} shape: {e}"))
 }
 
 /// Panicking wrapper for the tests; production goes through
@@ -453,14 +465,11 @@ pub fn load_localization() -> Localization {
     try_load_localization().expect("localization/en.json parses")
 }
 
-/// Remove characters the bundled font cannot draw from every string.
+/// Remove pictographs the bundled font cannot draw from every string.
 ///
-/// The rule is plain ASCII. A first attempt cut at U+2500 on the reasoning
-/// that Latin text and punctuation sit below it — and left the status bar
-/// clock still showing a box, because the alarm clock is U+23F0 and the
-/// stopwatch U+23F1. Every non-ASCII code point in `en.json` is a pictograph
-/// (see the test below, which fails if that stops being true), so there is no
-/// accented prose to protect and no reason for a subtler boundary.
+/// The supported script is ASCII plus Latin accents and Spanish punctuation.
+/// The old ASCII-only pass silently mangled translated words such as
+/// `Español`; font coverage is prewarmed for this set in `ui::prewarm`.
 ///
 /// Only strings that actually lost a character are trimmed, so the gap a
 /// stripped prefix leaves does not show as a stray indent while deliberate
@@ -468,7 +477,14 @@ pub fn load_localization() -> Localization {
 fn strip_undrawable_glyphs(value: &mut serde_json::Value) {
     match value {
         serde_json::Value::String(text) => {
-            let cleaned: String = text.chars().filter(char::is_ascii).collect();
+            let cleaned: String = text
+                .chars()
+                .filter(|ch| {
+                    ch.is_ascii()
+                        || ('\u{00A1}'..='\u{00BF}').contains(ch)
+                        || ('\u{00C0}'..='\u{024F}').contains(ch)
+                })
+                .collect();
             if cleaned.len() != text.len() {
                 *text = cleaned.trim().to_string();
             }
@@ -478,6 +494,25 @@ fn strip_undrawable_glyphs(value: &mut serde_json::Value) {
             map.values_mut().for_each(strip_undrawable_glyphs);
         }
         _ => {}
+    }
+}
+
+fn merge_json(base: &mut serde_json::Value, overlay: serde_json::Value) {
+    match base {
+        serde_json::Value::Object(base_map) => {
+            if let serde_json::Value::Object(overlay_map) = overlay {
+                for (key, value) in overlay_map {
+                    if let Some(existing) = base_map.get_mut(&key) {
+                        merge_json(existing, value);
+                    } else {
+                        base_map.insert(key, value);
+                    }
+                }
+            } else {
+                *base = overlay;
+            }
+        }
+        _ => *base = overlay,
     }
 }
 

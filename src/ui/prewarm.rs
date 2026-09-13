@@ -6,7 +6,7 @@
 /// at the retired WebGL texture until the batch flushes.
 pub fn prewarm_ui_glyphs() {
     const GLYPHS: &str =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 $%+-:;,.!?/()[]#'→•×";
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÉÍÓÚÜÑáéíóúüñ¿¡0123456789 $%+-:;,.!?/()[]#'→•×";
     for size in [12_u16, 14, 16, 20, 24, 28, 36, 44, 72] {
         let _ = macroquad_toolkit::ui::measure_ui_text(GLYPHS, None, size, 1.0);
     }

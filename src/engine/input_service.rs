@@ -194,6 +194,9 @@ impl InputService {
                 if is_key_pressed(KeyCode::F) {
                     actions.push(UiAction::ToggleFullscreen);
                 }
+                if is_key_pressed(KeyCode::L) {
+                    actions.push(UiAction::CycleLanguage);
+                }
                 for (action, (top, keypad)) in [
                     UiAction::CycleMasterVolume,
                     UiAction::CycleAmbienceVolume,
