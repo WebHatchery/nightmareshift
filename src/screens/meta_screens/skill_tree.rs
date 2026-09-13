@@ -244,8 +244,8 @@ pub fn draw_skill_tree(
     player_stats: &PlayerStats,
     game_data: Option<&GameData>,
     scroll: &mut ScrollArea,
-    selected_category: &mut usize,
-    selected_skill: &mut Option<String>,
+    selected_category: usize,
+    selected_skill: Option<&str>,
 ) -> UiAction {
     draw_noir_city_background();
 
@@ -322,7 +322,7 @@ pub fn draw_skill_tree(
         }
 
         let categories = ["survival", "occult", "efficiency", "comfort"];
-        *selected_category = (*selected_category).min(categories.len() - 1);
+        let category_index = selected_category.min(categories.len() - 1);
         let tab_gap = 10.0;
         let tab_w = ((screen_w - margin * 2.0 - tab_gap * 3.0) / 4.0).max(120.0);
         for (idx, category) in categories.iter().enumerate() {
@@ -332,7 +332,7 @@ pub fn draw_skill_tree(
                 tab_w,
                 42.0,
             );
-            let selected = idx == *selected_category;
+            let selected = idx == category_index;
             if draw_glass_button(
                 tab,
                 &skill_category_label(category, data),
@@ -344,24 +344,22 @@ pub fn draw_skill_tree(
                 true,
             ) && !selected
             {
-                *selected_category = idx;
-                *selected_skill = None;
-                scroll.set_offset(0.0);
+                return UiAction::SelectSkillCategory(idx);
             }
         }
 
-        let category = categories[*selected_category];
+        let category = categories[category_index];
         let skills = data
             .skills
             .iter()
             .filter(|skill| skill.category == category)
             .collect::<Vec<_>>();
-        if selected_skill
-            .as_ref()
-            .is_none_or(|id| !skills.iter().any(|skill| &skill.id == id))
-        {
-            *selected_skill = skills.first().map(|skill| skill.id.clone());
-        }
+        let effective_skill =
+            if selected_skill.is_none_or(|id| !skills.iter().any(|skill| skill.id == id)) {
+                skills.first().map(|skill| skill.id.as_str())
+            } else {
+                selected_skill
+            };
 
         let body_top = content_top + 56.0;
         let body_h = content_bottom - body_top;
@@ -412,7 +410,7 @@ pub fn draw_skill_tree(
         scroll.update(list_view, list_height);
         let mut y = list_view.y - scroll.offset();
         for skill in &skills {
-            let is_selected = selected_skill.as_deref() == Some(skill.id.as_str());
+            let is_selected = effective_skill == Some(skill.id.as_str());
             let is_unlocked = player_stats.is_skill_unlocked(&skill.id);
             let available = skill.can_unlock(&player_stats.unlocked_skills)
                 && player_stats.bank_balance >= skill.cost
@@ -427,7 +425,7 @@ pub fn draw_skill_tree(
             let card = UiRect::new(list_view.x, y, list_view.w - 8.0, card_h);
             if y + card_h > list_view.y && y < list_view.y + list_view.h {
                 if draw_glass_button(card, "", accent, true) && !scroll.absorbs_press() {
-                    *selected_skill = Some(skill.id.clone());
+                    return UiAction::SelectSkill(skill.id.clone());
                 }
                 draw_ui_text(
                     &skill.name,
@@ -474,7 +472,7 @@ pub fn draw_skill_tree(
 
         if let Some(skill) = skills
             .iter()
-            .find(|skill| selected_skill.as_deref() == Some(skill.id.as_str()))
+            .find(|skill| effective_skill == Some(skill.id.as_str()))
         {
             draw_small_caps(
                 "Selected upgrade",

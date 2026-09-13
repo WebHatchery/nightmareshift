@@ -58,7 +58,7 @@ impl Game {
                 self.delete_armed_until.is_some(),
                 self.save_notice.as_deref(),
                 Self::daily_seed(),
-                &mut self.seed_entry,
+                self.seed_entry.as_deref(),
             ),
             Screen::Briefing => menu_screens::draw_briefing(
                 &self.game_state,
@@ -77,14 +77,14 @@ impl Game {
                 &self.player_stats,
                 self.game_data.as_ref(),
                 &mut self.skill_tree_scroll,
-                &mut self.skill_tree_category,
-                &mut self.skill_tree_selected,
+                self.skill_tree_category,
+                self.skill_tree_selected.as_deref(),
             ),
             Screen::Almanac => meta_screens::draw_almanac(
                 &self.player_stats,
                 self.game_data.as_ref(),
                 &mut self.almanac_scroll,
-                &mut self.almanac_selected,
+                self.almanac_selected,
             ),
             Screen::Leaderboard => {
                 meta_screens::draw_leaderboard(&self.player_stats, self.game_data.as_ref())
@@ -94,7 +94,7 @@ impl Game {
             }
         };
 
-        if self.screen == Screen::Game && !reduced_motion() {
+        if self.screen == Screen::Game {
             let game_data_ref = self.game_data.as_ref();
             if self.overlays.rules {
                 let rules_action = game_screens::draw_rules_panel(&self.game_state, game_data_ref);

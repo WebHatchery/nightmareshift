@@ -16,14 +16,15 @@ use super::widgets::draw_menu_command;
 ///
 /// `seed_entry` is the seed modal's in-progress digits, owned by `Game` so
 /// the text survives across frames; `Some` means the modal is open and this
-/// screen is consuming the keyboard.
+/// screen is consuming the keyboard. Keyboard input is dispatched by `Game`
+/// before drawing, leaving this renderer read-only.
 pub fn draw_main_menu(
     player_stats: &PlayerStats,
     game_data: Option<&GameData>,
     delete_armed: bool,
     save_notice: Option<&str>,
     daily_seed: u64,
-    seed_entry: &mut Option<String>,
+    seed_entry: Option<&str>,
 ) -> UiAction {
     draw_title_background();
 
@@ -63,7 +64,7 @@ pub fn draw_main_menu(
     // it) and the keyboard types the seed — digits build it, Enter deals
     // that night, Escape walks away. The Space shortcut to Start is
     // suppressed in the dispatcher while this is `Some`.
-    if let Some(digits) = seed_entry.as_mut() {
+    if let Some(digits) = seed_entry {
         draw_modal_scrim();
         let panel = UiRect::centered_x(screen_width(), screen_height() * 0.32, 460.0_f32, 190.0);
         draw_glass_panel(panel, colors::ACCENT_SKY);
@@ -83,21 +84,10 @@ pub fn draw_main_menu(
             colors::TEXT_SECONDARY,
         );
 
-        while let Some(ch) = get_char_pressed() {
-            // u64::MAX is twenty digits; stopping at nineteen keeps every
-            // enterable number parseable without a range check.
-            if ch.is_ascii_digit() && digits.len() < 19 {
-                digits.push(ch);
-            }
-        }
-        if is_key_pressed(KeyCode::Backspace) {
-            digits.pop();
-        }
-
         let shown = if digits.is_empty() {
             "_".to_string()
         } else {
-            digits.clone()
+            digits.to_string()
         };
         draw_ui_text(
             &shown,
@@ -106,22 +96,38 @@ pub fn draw_main_menu(
             fonts::SIZE_XL,
             colors::TEXT_PRIMARY,
         );
-        draw_ui_text(
-            "ENTER to drive it - ESC to cancel",
+        draw_small_caps(
+            "Type digits or tap the controls below",
             inner.x,
-            inner.y + 122.0,
+            inner.y + 112.0,
             fonts::SIZE_XS,
             colors::TEXT_MUTED,
         );
-
-        if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::KpEnter) {
-            if let Ok(seed) = digits.parse::<u64>() {
-                *seed_entry = None;
-                return UiAction::StartSeededRun(seed);
+        let button_y = inner.y + 132.0;
+        let button_gap = 10.0;
+        let button_w = (inner.w - button_gap * 2.0) / 3.0;
+        let buttons = [
+            ("ERASE", UiAction::EraseSeedDigit, colors::ACCENT_WARNING),
+            (
+                "START",
+                digits
+                    .parse::<u64>()
+                    .ok()
+                    .map_or(UiAction::None, UiAction::StartSeededRun),
+                colors::FUEL_GOOD,
+            ),
+            ("CANCEL", UiAction::CancelSeedEntry, colors::ACCENT_DANGER),
+        ];
+        for (idx, (label, action, color)) in buttons.into_iter().enumerate() {
+            let rect = UiRect::new(
+                inner.x + idx as f32 * (button_w + button_gap),
+                button_y,
+                button_w,
+                32.0,
+            );
+            if crate::ui::draw_glass_button(rect, label, color, action != UiAction::None) {
+                return action;
             }
-        }
-        if is_key_pressed(KeyCode::Escape) {
-            *seed_entry = None;
         }
         return UiAction::None;
     }

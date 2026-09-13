@@ -42,6 +42,18 @@ pub enum UiAction {
     StartDailyRun,
     /// Begin a run on a player-entered seed.
     StartSeededRun(u64),
+    /// Append one digit to the open seed-entry dialog.
+    SeedDigit(char),
+    /// Remove the last digit from the open seed-entry dialog.
+    EraseSeedDigit,
+    /// Close the seed-entry dialog without starting a run.
+    CancelSeedEntry,
+    /// Select a skill-tree category without mutating during drawing.
+    SelectSkillCategory(usize),
+    /// Select a skill-tree card without mutating during drawing.
+    SelectSkill(String),
+    /// Select an Almanac passenger without mutating during drawing.
+    SelectAlmanacPassenger(u32),
     // Meta-progression screens
     OpenSkillTree,
     OpenAlmanac,

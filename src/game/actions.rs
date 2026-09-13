@@ -48,6 +48,25 @@ impl Game {
                     self.start_game();
                 }
             }
+            UiAction::SeedDigit(ch) => {
+                if self.screen == Screen::MainMenu
+                    && self.seed_entry.is_some()
+                    && ch.is_ascii_digit()
+                {
+                    let digits = self.seed_entry.as_mut().expect("seed entry checked");
+                    if digits.len() < 19 {
+                        digits.push(ch);
+                    }
+                }
+            }
+            UiAction::EraseSeedDigit => {
+                if let Some(digits) = self.seed_entry.as_mut() {
+                    digits.pop();
+                }
+            }
+            UiAction::CancelSeedEntry => {
+                self.seed_entry = None;
+            }
             UiAction::AcceptRide => {
                 if self.screen == Screen::Game {
                     self.accept_ride();
@@ -326,6 +345,17 @@ impl Game {
                         self.save_stats();
                     }
                 }
+            }
+            UiAction::SelectSkillCategory(category) => {
+                self.skill_tree_category = category.min(3);
+                self.skill_tree_selected = None;
+                self.skill_tree_scroll.set_offset(0.0);
+            }
+            UiAction::SelectSkill(skill_id) => {
+                self.skill_tree_selected = Some(skill_id);
+            }
+            UiAction::SelectAlmanacPassenger(passenger_id) => {
+                self.almanac_selected = Some(passenger_id);
             }
             UiAction::None => {}
         }

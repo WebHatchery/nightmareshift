@@ -12,6 +12,7 @@ use crate::data::{ActionType, GameData, RouteType, Rule, RuleType};
 use crate::engine::*;
 use crate::screens::Screen;
 use crate::state::*;
+use crate::ui::UiAction;
 use macroquad_toolkit::ui::ScrollArea;
 
 /// What a press on the menu's delete button should do.
@@ -737,6 +738,27 @@ impl Game {
 
     /// Handle input
     pub fn handle_input(&mut self) {
+        if self.screen == Screen::MainMenu && self.seed_entry.is_some() {
+            while let Some(ch) = get_char_pressed() {
+                self.handle_ui_action(UiAction::SeedDigit(ch));
+            }
+            if is_key_pressed(KeyCode::Backspace) {
+                self.handle_ui_action(UiAction::EraseSeedDigit);
+            }
+            if is_key_pressed(KeyCode::Escape) {
+                self.handle_ui_action(UiAction::CancelSeedEntry);
+            }
+            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::KpEnter) {
+                if let Some(seed) = self
+                    .seed_entry
+                    .as_deref()
+                    .and_then(|value| value.parse::<u64>().ok())
+                {
+                    self.handle_ui_action(UiAction::StartSeededRun(seed));
+                }
+            }
+            return;
+        }
         let actions = InputService::capture_input(
             self.screen,
             self.game_state.game_phase,

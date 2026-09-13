@@ -257,7 +257,7 @@ pub fn draw_almanac(
     player_stats: &PlayerStats,
     game_data: Option<&GameData>,
     scroll: &mut ScrollArea,
-    selected: &mut Option<u32>,
+    selected: Option<u32>,
 ) -> UiAction {
     draw_noir_city_background();
     let Some(data) = game_data else {
@@ -304,14 +304,13 @@ pub fn draw_almanac(
         colors::TEXT_MUTED,
     );
 
-    if selected.is_none() {
-        *selected = data
-            .passengers
+    let effective_selected = selected.or_else(|| {
+        data.passengers
             .iter()
             .find(|passenger| player_stats.get_almanac_entry(passenger.id).encountered)
             .or_else(|| data.passengers.first())
-            .map(|passenger| passenger.id);
-    }
+            .map(|passenger| passenger.id)
+    });
     let body_top = 124.0;
     let body_bottom = h - 66.0;
     let body_h = body_bottom - body_top;
@@ -359,7 +358,7 @@ pub fn draw_almanac(
             continue;
         }
         let entry = player_stats.get_almanac_entry(passenger.id);
-        let is_selected = *selected == Some(passenger.id);
+        let is_selected = effective_selected == Some(passenger.id);
         let accent = if is_selected {
             colors::ACCENT_GOLD
         } else if entry.encountered {
@@ -368,7 +367,7 @@ pub fn draw_almanac(
             colors::BORDER_DIM
         };
         if draw_glass_button(card, "", accent, true) && !scroll.absorbs_press() {
-            *selected = Some(passenger.id);
+            return UiAction::SelectAlmanacPassenger(passenger.id);
         }
         let portrait = UiRect::new(card.x + 8.0, card.y + 8.0, 54.0, 66.0);
         if entry.encountered {
@@ -411,7 +410,7 @@ pub fn draw_almanac(
     if let Some(passenger) = data
         .passengers
         .iter()
-        .find(|passenger| Some(passenger.id) == *selected)
+        .find(|passenger| Some(passenger.id) == effective_selected)
     {
         let action = draw_dossier(dossier, passenger, player_stats, data);
         if action != UiAction::None {
