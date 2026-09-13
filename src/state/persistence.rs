@@ -81,11 +81,17 @@ impl Persistence {
     /// survive under a quarantine name, and the caller gets a sentence for
     /// the menu. A save that simply does not exist is not a failure and
     /// reports nothing.
-    pub fn load_or_quarantine() -> (PlayerStats, Option<String>) {
+    /// The third return value says whether a new save may safely be written.
+    /// It is false when quarantine failed, preserving the unreadable original.
+    pub fn load_or_quarantine() -> (PlayerStats, Option<String>, bool) {
         match Self::load() {
-            Ok(stats) => (stats, None),
-            Err(_) if !Self::save_exists() => (PlayerStats::new(), None),
-            Err(error) => (PlayerStats::new(), Some(Self::quarantine(&error))),
+            Ok(stats) => (stats, None, true),
+            Err(_) if !Self::save_exists() => (PlayerStats::new(), None, true),
+            Err(error) => {
+                let notice = Self::quarantine(&error);
+                let can_save = !notice.contains("or set aside");
+                (PlayerStats::new(), Some(notice), can_save)
+            }
         }
     }
 

@@ -9,6 +9,10 @@ fn default_nights_per_run() -> u32 {
     5
 }
 
+fn default_guideline_decision_seconds() -> f32 {
+    30.0
+}
+
 /// Core game constants
 // `Default` exists solely so a `GameState` can be constructed when the
 // data failed to load — the loading screen then refuses to advance, so a
@@ -19,6 +23,12 @@ pub struct GameConstants {
     pub initial_fuel: u32,
     #[serde(rename = "INITIAL_TIME")]
     pub initial_time: u32,
+    /// Duration of the guideline decision window in simulation seconds.
+    #[serde(
+        rename = "GUIDELINE_DECISION_SECONDS",
+        default = "default_guideline_decision_seconds"
+    )]
+    pub guideline_decision_seconds: f32,
     /// Number of consecutive nights that make up one full run.
     #[serde(rename = "NIGHTS_PER_RUN", default = "default_nights_per_run")]
     pub nights_per_run: u32,
@@ -88,6 +98,16 @@ pub struct FuelConstants {
     pub fuel_check_minimum: u32,
     #[serde(rename = "COST_PER_PERCENT")]
     pub cost_per_percent: f32,
+    /// Fuel percentage dispensed by the partial refuel action.
+    #[serde(
+        rename = "PARTIAL_REFUEL_AMOUNT",
+        default = "default_partial_refuel_amount"
+    )]
+    pub partial_refuel_amount: f32,
+}
+
+fn default_partial_refuel_amount() -> f32 {
+    25.0
 }
 
 impl FuelConstants {

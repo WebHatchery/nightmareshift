@@ -166,7 +166,7 @@ impl RideService {
             return Err("You ran out of fuel with a passenger in the car.".to_string());
         }
 
-        let current_time = macroquad::prelude::get_time();
+        let current_time = state.simulation_time;
         if let Some(passenger) = state.current_passenger.clone() {
             state.current_ride = Some(CurrentRide {
                 pickup_location: passenger.pickup.clone(),

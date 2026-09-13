@@ -2,18 +2,20 @@ use macroquad::prelude::*;
 
 mod actions;
 mod capture_scenes;
+mod input;
 mod render;
 mod rules;
 mod shift;
 
 use crate::audio::AudioMixer;
-use crate::bot::{PlaytestBot, PlaytestDirective};
+use crate::bot::PlaytestBot;
 use crate::data::{ActionType, GameData, RouteType, Rule, RuleType};
 use crate::engine::*;
 use crate::screens::Screen;
 use crate::state::*;
-use crate::ui::UiAction;
 use macroquad_toolkit::ui::ScrollArea;
+
+const SIMULATION_TICK_SECONDS: f64 = 1.0 / 60.0;
 
 /// What a press on the menu's delete button should do.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -83,6 +85,9 @@ pub struct Game {
     /// quarantine already ran by the time this is set; the notice is the
     /// player's only way to learn the old record still exists.
     save_notice: Option<String>,
+    /// False while an unreadable save remains in place because quarantine
+    /// failed; autosaving must never destroy that last recoverable copy.
+    save_blocked: bool,
     /// A fixed seed from `--seed N` / `NIGHTMARE_SHIFT_SEED`, applied at
     /// every run start so the whole campaign replays draw-for-draw. The
     /// developer half of seeded runs; the menu's daily and seeded starts
@@ -145,7 +150,7 @@ impl Game {
 
         // Try to load saved player stats; an unreadable save is set aside
         // rather than left in place for the next auto-save to destroy.
-        let (mut player_stats, save_notice) = Persistence::load_or_quarantine();
+        let (mut player_stats, save_notice, save_allowed) = Persistence::load_or_quarantine();
         player_stats.init_achievements();
         let playtest_bot = PlaytestBot::from_launch_args();
         if let Some(bot) = &playtest_bot {
@@ -166,7 +171,7 @@ impl Game {
             .as_ref()
             .map(|data| data.constants.game_constants.clone())
             .unwrap_or_default();
-        let game_state = GameState::new(current_time, &constants);
+        let game_state = GameState::new(0.0, &constants);
         let audio = AudioMixer::load().await;
         crate::ui::prewarm_ui_glyphs();
         // Asking the browser to *exit* fullscreen during startup throws when
@@ -199,6 +204,7 @@ impl Game {
             ui_capture_scene: None,
             data_error,
             save_notice,
+            save_blocked: !save_allowed,
             run_seed: seed_from_launch(),
             menu_seed: None,
             seed_entry: None,
@@ -222,8 +228,15 @@ impl Game {
     }
 
     /// Save player stats
-    fn save_stats(&self) {
+    fn save_stats(&mut self) {
         if self.capture_mode {
+            return;
+        }
+        if self.save_blocked {
+            self.save_notice = Some(
+                "Saving is disabled until the unreadable old save can be set aside. Your original record is protected."
+                    .to_string(),
+            );
             return;
         }
         if self
@@ -237,6 +250,7 @@ impl Game {
             eprintln!("{}", data.localization.system.saving);
         }
         if let Err(e) = Persistence::save(&self.player_stats) {
+            self.save_notice = Some(format!("Could not save progress: {e}"));
             if let Some(data) = &self.game_data {
                 eprintln!("{}: {}", data.localization.system.error, e);
             } else {
@@ -248,7 +262,7 @@ impl Game {
     /// Spawn a new passenger
     fn spawn_passenger(&mut self) {
         if let Some(ref data) = self.game_data {
-            let current_time = get_time();
+            let current_time = self.game_state.simulation_time;
             if !RideService::spawn_passenger(&mut self.game_state, data, current_time) {
                 self.end_shift(true);
             }
@@ -325,7 +339,7 @@ impl Game {
     /// Choose a route
     fn choose_route(&mut self, route: RouteType) {
         if let Some(ref data) = self.game_data {
-            let current_time = get_time();
+            let current_time = self.game_state.simulation_time;
 
             if let RouteOutcome::GameOver(reason) = RideService::choose_route(
                 &mut self.game_state,
@@ -356,7 +370,7 @@ impl Game {
     /// Complete the current ride
     fn complete_ride(&mut self, route: RouteType) {
         if let Some(ref data) = self.game_data {
-            let current_time = get_time();
+            let current_time = self.game_state.simulation_time;
             RideService::complete_ride(
                 &mut self.game_state,
                 data,
@@ -392,7 +406,7 @@ impl Game {
                 SkillModifiers::from_unlocked(&data.skills, &self.player_stats.unlocked_skills)
                     .refuel_cost_mult;
             let fuel_needed = self.game_state.max_fuel - self.game_state.fuel;
-            let amount = 25.0_f32.min(fuel_needed);
+            let amount = data.constants.fuel.partial_refuel_amount.min(fuel_needed);
             let cost = data.constants.fuel.refuel_cost(amount, refuel_mult);
 
             if self.game_state.earnings >= cost {
@@ -414,7 +428,8 @@ impl Game {
         else {
             return;
         };
-        if ItemService::use_item(&mut self.game_state, idx, &constants, get_time()) {
+        let current_time = self.game_state.simulation_time;
+        if ItemService::use_item(&mut self.game_state, idx, &constants, current_time) {
             self.overlays.inventory = false;
         }
     }
@@ -436,9 +451,16 @@ impl Game {
             }
             DeleteDecision::Erase => {
                 self.delete_armed_until = None;
-                if Persistence::delete_save().is_ok() {
-                    self.player_stats = PlayerStats::new();
-                    self.player_stats.init_achievements();
+                match Persistence::delete_save() {
+                    Ok(()) => {
+                        self.player_stats = PlayerStats::new();
+                        self.player_stats.init_achievements();
+                        self.save_notice = None;
+                        self.save_blocked = false;
+                    }
+                    Err(error) => {
+                        self.save_notice = Some(format!("Could not delete the save: {error}"));
+                    }
                 }
             }
         }
@@ -559,9 +581,17 @@ impl Game {
 
     /// Update game logic
     pub fn update(&mut self) {
-        let current_time = get_time();
-        let dt = (current_time - self.last_frame_time) as f32;
-        self.last_frame_time = current_time;
+        let wall_time = get_time();
+        let frame_dt = (wall_time - self.last_frame_time).clamp(0.0, 0.25) as f32;
+        self.last_frame_time = wall_time;
+        let simulation_active = self.screen == Screen::Game && !self.overlays.pause;
+        let dt = if !simulation_active {
+            0.0
+        } else {
+            self.game_state.simulation_time += SIMULATION_TICK_SECONDS;
+            SIMULATION_TICK_SECONDS as f32
+        };
+        let current_time = self.game_state.simulation_time;
 
         if self.screen == Screen::Loading {
             self.loading_frames += 1;
@@ -578,7 +608,7 @@ impl Game {
         self.game_state.settle_passenger_trust();
 
         // Update effects
-        self.transition.update(dt);
+        self.transition.update(frame_dt);
         if self.player_stats.accessibility.reduced_motion {
             self.screen_shake.clear();
             self.particles.clear();
@@ -646,7 +676,8 @@ impl Game {
                     }
                 } else if let Some(start_time) = self.game_state.guideline_decision_start_time {
                     let elapsed = (current_time - start_time) as f32;
-                    self.game_state.guideline_time_remaining = (30.0 - elapsed).max(0.0);
+                    self.game_state.guideline_time_remaining =
+                        (self.game_state.guideline_decision_seconds - elapsed).max(0.0);
                     guideline_timed_out = self.game_state.guideline_time_remaining <= 0.0;
                 }
             }
@@ -720,79 +751,6 @@ impl Game {
             &mut self.game_state,
             &self.player_stats.accessibility,
         );
-    }
-
-    /// Which modal overlay is eating input this frame, if any. The pause
-    /// menu wins over the panels because opening it closes them.
-    fn active_overlay(&self) -> Overlay {
-        if self.screen != Screen::Game {
-            Overlay::None
-        } else if self.overlays.pause {
-            Overlay::Pause
-        } else if self.overlays.rules || self.overlays.inventory {
-            Overlay::Panel
-        } else {
-            Overlay::None
-        }
-    }
-
-    /// Handle input
-    pub fn handle_input(&mut self) {
-        if self.screen == Screen::MainMenu && self.seed_entry.is_some() {
-            while let Some(ch) = get_char_pressed() {
-                self.handle_ui_action(UiAction::SeedDigit(ch));
-            }
-            if is_key_pressed(KeyCode::Backspace) {
-                self.handle_ui_action(UiAction::EraseSeedDigit);
-            }
-            if is_key_pressed(KeyCode::Escape) {
-                self.handle_ui_action(UiAction::CancelSeedEntry);
-            }
-            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::KpEnter) {
-                if let Some(seed) = self
-                    .seed_entry
-                    .as_deref()
-                    .and_then(|value| value.parse::<u64>().ok())
-                {
-                    self.handle_ui_action(UiAction::StartSeededRun(seed));
-                }
-            }
-            return;
-        }
-        let actions = InputService::capture_input(
-            self.screen,
-            self.game_state.game_phase,
-            self.active_overlay(),
-        );
-        for action in actions {
-            self.handle_ui_action(action);
-        }
-    }
-
-    /// Let the optional playtest bot drive game actions.
-    pub fn handle_playtest_bot(&mut self) {
-        let directive = if let Some(bot) = self.playtest_bot.as_mut() {
-            bot.next_action(
-                self.screen,
-                &self.game_state,
-                &self.player_stats,
-                self.game_data.as_ref(),
-                get_time(),
-            )
-        } else {
-            PlaytestDirective::None
-        };
-
-        match directive {
-            PlaytestDirective::None => {}
-            PlaytestDirective::Action(action) => self.handle_ui_action(action),
-            PlaytestDirective::Stop(code) => {
-                #[cfg(not(target_arch = "wasm32"))]
-                std::process::exit(code);
-                #[cfg(target_arch = "wasm32")]
-                let _ = code;
-            }
-        }
     }
 }
 

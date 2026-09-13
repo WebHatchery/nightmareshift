@@ -360,6 +360,10 @@ pub enum DialogueSpeaker {
 /// Complete game state
 #[derive(Debug, Clone)]
 pub struct GameState {
+    /// Monotonic gameplay time. It advances in fixed simulation ticks while
+    /// the shift is active, so waits between rendered frames cannot change
+    /// seeded outcomes or item/weather deadlines.
+    pub simulation_time: f64,
     // Core resources
     pub fuel: f32,
     /// Maximum fuel capacity for this shift (100 plus any capacity skills).
@@ -480,6 +484,7 @@ pub struct GameState {
     pub active_guideline: Option<Guideline>,
     pub guideline_decision_start_time: Option<f64>,
     pub guideline_time_remaining: f32,
+    pub guideline_decision_seconds: f32,
 
     /// Cab actions that have already spent their comfort soothing this ride.
     /// Each comfort channel works once per ride; the list clears at drop-off.
@@ -502,8 +507,9 @@ pub struct GameState {
 
 impl GameState {
     /// Create a new game state with initial values from constants
-    pub fn new(_current_time: f64, constants: &GameConstants) -> Self {
+    pub fn new(current_time: f64, constants: &GameConstants) -> Self {
         Self {
+            simulation_time: current_time,
             fuel: constants.initial_fuel as f32,
             max_fuel: 100.0,
             night: 1,
@@ -565,7 +571,8 @@ impl GameState {
             last_audio_caption: None,
             active_guideline: None,
             guideline_decision_start_time: None,
-            guideline_time_remaining: 30.0,
+            guideline_time_remaining: constants.guideline_decision_seconds,
+            guideline_decision_seconds: constants.guideline_decision_seconds,
             comfort_soothed_actions: Vec::new(),
             brink_spent: false,
             night_modifier: None,
@@ -623,7 +630,7 @@ impl GameState {
         self.last_audio_caption = None;
         self.active_guideline = None;
         self.guideline_decision_start_time = None;
-        self.guideline_time_remaining = 30.0;
+        self.guideline_time_remaining = self.guideline_decision_seconds;
         self.comfort_soothed_actions.clear();
         self.brink_spent = false;
         self.night_modifier = None;

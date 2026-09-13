@@ -1,5 +1,3 @@
-use macroquad::prelude::get_time;
-
 use super::Game;
 use crate::data::{
     Consequence, ConsequenceType, Passenger, ProtectionType, ReputationConstants, RouteType,
@@ -32,12 +30,12 @@ impl Game {
                     Self::cab_action_label(&action_key)
                 ),
                 speaker: DialogueSpeaker::Driver,
-                timestamp: get_time(),
+                timestamp: self.game_state.simulation_time,
             });
             return;
         }
 
-        let current_time = get_time();
+        let current_time = self.game_state.simulation_time;
         let visible = GameEngine::check_rule_violation(
             &self.game_state.current_rules,
             &action_key,
@@ -542,7 +540,7 @@ impl Game {
         let given = self.game_state.inventory.remove(item_idx);
         self.game_state.inventory.push(offered_item);
 
-        let current_time = get_time();
+        let current_time = self.game_state.simulation_time;
         let Some(passenger) = self.game_state.current_passenger.clone() else {
             return;
         };
@@ -663,7 +661,7 @@ impl Game {
     }
 
     pub(super) fn evaluate_guideline_decision(&mut self, action: GuidelineAction) {
-        let current_time = get_time();
+        let current_time = self.game_state.simulation_time;
 
         if let (Some(guideline), Some(passenger)) = (
             self.game_state.active_guideline.clone(),

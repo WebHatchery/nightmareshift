@@ -1,6 +1,7 @@
 //! Data loading from embedded JSON files.
 
 use super::*;
+use std::collections::HashSet;
 
 /// All game data loaded from JSON files
 pub struct GameData {
@@ -57,11 +58,23 @@ impl GameData {
             ("skillTreeData.json", data.skills.is_empty()),
             ("guidelineData.json", data.guidelines.is_empty()),
             ("eventData.json", data.events.is_empty()),
+            ("itemPoolData.json", data.item_pools.all_names().is_empty()),
+            ("itemData.json", data.items.is_empty()),
+            ("rewardData.json", data.rewards.achievements.is_empty()),
+            (
+                "nightModifierData.json",
+                data.night_modifiers.modifiers.is_empty(),
+            ),
+            ("epilogueData.json", data.epilogues.is_empty()),
+            ("almanacData.json", data.almanac.levels.is_empty()),
         ] {
             if empty {
                 data.load_errors
                     .push(format!("{file} failed to load; its content is missing"));
             }
+        }
+        if let Err(error) = data.validate() {
+            data.load_errors.push(error);
         }
         Ok(data)
     }
@@ -69,6 +82,209 @@ impl GameData {
     /// Find a location by name
     pub fn get_location(&self, name: &str) -> Option<&Location> {
         self.locations.iter().find(|l| l.name == name)
+    }
+
+    /// Check references and balance invariants after every embedded deck is
+    /// parsed. The error names the source file so the loading/menu warning is
+    /// actionable on the web build, where stderr is not visible.
+    pub fn validate(&self) -> Result<(), String> {
+        fn duplicate_u32<I>(source: &str, ids: I) -> Result<(), String>
+        where
+            I: IntoIterator<Item = u32>,
+        {
+            let mut seen = HashSet::new();
+            for id in ids {
+                if !seen.insert(id) {
+                    return Err(format!("{source}: duplicate id {id}"));
+                }
+            }
+            Ok(())
+        }
+
+        fn duplicate_text<'a, I>(source: &str, ids: I) -> Result<(), String>
+        where
+            I: IntoIterator<Item = &'a str>,
+        {
+            let mut seen = HashSet::new();
+            for id in ids {
+                if !seen.insert(id) {
+                    return Err(format!("{source}: duplicate id {id}"));
+                }
+            }
+            Ok(())
+        }
+
+        duplicate_u32(
+            "passengerData.json",
+            self.passengers.iter().map(|passenger| passenger.id),
+        )?;
+        duplicate_u32("shiftRulesData.json", self.rules.iter().map(|rule| rule.id))?;
+        duplicate_u32(
+            "guidelineData.json",
+            self.guidelines.iter().map(|guideline| guideline.id),
+        )?;
+        duplicate_text(
+            "locationData.json",
+            self.locations.iter().map(|location| location.name.as_str()),
+        )?;
+        duplicate_text(
+            "eventData.json",
+            self.events.iter().map(|event| event.id.as_str()),
+        )?;
+        duplicate_text(
+            "nightModifierData.json",
+            self.night_modifiers
+                .modifiers
+                .iter()
+                .map(|modifier| modifier.id.as_str()),
+        )?;
+
+        let passenger_ids: HashSet<u32> = self
+            .passengers
+            .iter()
+            .map(|passenger| passenger.id)
+            .collect();
+        let location_names: HashSet<&str> = self
+            .locations
+            .iter()
+            .map(|location| location.name.as_str())
+            .collect();
+        let rule_ids: HashSet<u32> = self.rules.iter().map(|rule| rule.id).collect();
+        let guideline_ids: HashSet<u32> = self
+            .guidelines
+            .iter()
+            .map(|guideline| guideline.id)
+            .collect();
+        let guideline_exception_ids: HashSet<&str> = self
+            .guidelines
+            .iter()
+            .flat_map(|guideline| {
+                guideline
+                    .exceptions
+                    .iter()
+                    .map(|exception| exception.id.as_str())
+            })
+            .collect();
+        let traits: HashSet<&str> = self
+            .passengers
+            .iter()
+            .flat_map(|passenger| passenger.traits.iter().map(String::as_str))
+            .collect();
+
+        for passenger in &self.passengers {
+            for location in [&passenger.pickup, &passenger.destination] {
+                if !location_names.contains(location.as_str()) {
+                    return Err(format!(
+                        "passengerData.json: passenger {} references missing location {location}",
+                        passenger.id
+                    ));
+                }
+            }
+            if passenger.personal_rule.trim().is_empty() {
+                return Err(format!(
+                    "passengerData.json: passenger {} has an empty personal rule",
+                    passenger.id
+                ));
+            }
+            for relationship in &passenger.relationships {
+                if !passenger_ids.contains(relationship) {
+                    return Err(format!(
+                        "passengerData.json: passenger {} references missing relationship {}",
+                        passenger.id, relationship
+                    ));
+                }
+            }
+            for exception in &passenger.guideline_exceptions {
+                if !guideline_exception_ids.contains(exception.as_str()) {
+                    return Err(format!(
+                        "passengerData.json: passenger {} references missing guideline exception {exception}",
+                        passenger.id
+                    ));
+                }
+            }
+            for item in passenger
+                .drop_items
+                .iter()
+                .chain(passenger.wanted_items.iter())
+                .chain(passenger.trade_reward.iter())
+            {
+                if !self.items.contains(item) {
+                    return Err(format!(
+                        "itemData.json: passenger {} references missing item {item}",
+                        passenger.id
+                    ));
+                }
+            }
+        }
+        for rule in &self.rules {
+            if let Some(guideline) = rule.related_guideline_id {
+                if !guideline_ids.contains(&guideline) {
+                    return Err(format!(
+                        "shiftRulesData.json: rule {} references missing guideline {guideline}",
+                        rule.id
+                    ));
+                }
+            }
+            for conflict in &rule.conflicts_with {
+                if !rule_ids.contains(conflict) {
+                    return Err(format!(
+                        "shiftRulesData.json: rule {} references missing conflict {conflict}",
+                        rule.id
+                    ));
+                }
+            }
+        }
+        for event in &self.events {
+            for choice in &event.choices {
+                if let Some(trait_name) = &choice.required_trait {
+                    if !traits.contains(trait_name.as_str()) {
+                        return Err(format!(
+                            "eventData.json: event {} references missing trait {trait_name}",
+                            event.id
+                        ));
+                    }
+                }
+            }
+            if event.weight <= 0.0 {
+                return Err(format!(
+                    "eventData.json: event {} has non-positive weight",
+                    event.id
+                ));
+            }
+        }
+        for modifier in &self.night_modifiers.modifiers {
+            if modifier.weight == 0 || modifier.fare_mult <= 0.0 || modifier.quota_mult <= 0.0 {
+                return Err(format!(
+                    "nightModifierData.json: modifier {} has an invalid balance value",
+                    modifier.id
+                ));
+            }
+        }
+        if !(0.0..=1.0).contains(&self.night_modifiers.chance)
+            || self.constants.fuel.critical_fuel > self.constants.fuel.low_fuel_warning
+            || self.constants.fuel.low_fuel_warning > self.constants.fuel.medium_fuel
+            || self.constants.risk.max_risk_level < self.constants.risk.extreme_risk
+            || self.constants.game_constants.guideline_decision_seconds <= 0.0
+            || self.constants.fuel.partial_refuel_amount <= 0.0
+        {
+            return Err("constants.json: balance invariants are not valid".to_string());
+        }
+        for kind in [
+            EpilogueKind::RunComplete,
+            EpilogueKind::DeathDelivered,
+            EpilogueKind::GameOver,
+        ] {
+            if !self
+                .epilogues
+                .iter()
+                .any(|entry| entry.kind == kind && !entry.texts.is_empty())
+            {
+                return Err(format!(
+                    "epilogueData.json: no non-empty entry for {kind:?}"
+                ));
+            }
+        }
+        Ok(())
     }
 }
 

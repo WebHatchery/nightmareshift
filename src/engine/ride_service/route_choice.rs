@@ -215,12 +215,12 @@ impl RideService {
             }
         }
 
-        Self::apply_rule_need_adjustment(state, &violation, macroquad::prelude::get_time());
+        Self::apply_rule_need_adjustment(state, &violation, state.simulation_time);
         state.rules_violated += 1;
         state.queue_audio(
             "violation",
             format!("[Rule violation: {rule_title}]"),
-            macroquad::prelude::get_time(),
+            state.simulation_time,
         );
         state.adjust_player_trust(-0.08);
 
@@ -246,7 +246,7 @@ impl RideService {
             state.queue_audio(
                 "ward",
                 format!("[Ward absorbs the {rule_title} violation]"),
-                macroquad::prelude::get_time(),
+                state.simulation_time,
             );
             let ward_label = ward_name.unwrap_or_else(|| "ward".to_string());
             state.current_dialogue = Some(CurrentDialogue {
@@ -255,7 +255,7 @@ impl RideService {
                     ward_label, rule_title, message
                 ),
                 speaker: DialogueSpeaker::Narrator,
-                timestamp: macroquad::prelude::get_time(),
+                timestamp: state.simulation_time,
             });
             return None;
         }
@@ -268,7 +268,7 @@ impl RideService {
                     format!("Rule pressure spikes: {}. {}", rule_title, message)
                 },
                 speaker: DialogueSpeaker::Narrator,
-                timestamp: macroquad::prelude::get_time(),
+                timestamp: state.simulation_time,
             });
             return None;
         }
@@ -718,7 +718,7 @@ impl RideService {
                 // Enter guideline decision phase
                 state.active_guideline = Some(guideline);
                 state.guideline_decision_start_time = Some(current_time);
-                state.guideline_time_remaining = 30.0;
+                state.guideline_time_remaining = state.guideline_decision_seconds;
                 state.game_phase = GamePhase::GuidelineDecision;
                 return Some(RouteOutcome::GuidelineTriggered);
             }

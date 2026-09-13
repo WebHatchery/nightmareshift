@@ -56,7 +56,7 @@ impl Game {
     /// difficulty and the earnings quota with how deep into the run we are.
     pub(super) fn begin_night(&mut self) {
         if let Some(ref data) = self.game_data {
-            let current_time = get_time();
+            let current_time = self.game_state.simulation_time;
             self.player_stats.session_start = Some(current_time);
 
             // Reset per-night resources (fuel, time, earnings) but keep the run's
@@ -212,7 +212,7 @@ impl Game {
         self.game_state.current_dialogue = Some(CurrentDialogue {
             text: "Dispatch is quiet. Find a passenger when you're ready.".to_string(),
             speaker: DialogueSpeaker::Narrator,
-            timestamp: get_time(),
+            timestamp: self.game_state.simulation_time,
         });
         self.transition.begin_scene();
         self.screen = Screen::Game;
@@ -310,7 +310,7 @@ impl Game {
             self.game_state.queue_audio(
                 "success",
                 "[Dispatch chime: quota cleared and the shift is survived]",
-                get_time(),
+                self.game_state.simulation_time,
             );
             // Add survival bonus
             if let Some(ref data) = self.game_data {
@@ -337,7 +337,7 @@ impl Game {
                 self.game_state.queue_audio(
                     "meltdown",
                     "[Cabin distortion: passenger meltdown]",
-                    get_time(),
+                    self.game_state.simulation_time,
                 );
             }
             if self.game_state.game_over_reason.is_none() {
@@ -400,7 +400,7 @@ impl Game {
         let play_time = self
             .player_stats
             .session_start
-            .map(|start| ((get_time() - start) / 60.0).max(0.0) as u32)
+            .map(|start| ((self.game_state.simulation_time - start) / 60.0).max(0.0) as u32)
             .unwrap_or_else(|| {
                 let initial = self
                     .game_data

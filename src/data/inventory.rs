@@ -46,7 +46,6 @@ impl ItemPools {
     /// Every name any pool can produce, in declaration order. Used by the
     /// catalog-coverage test so a name can never be droppable without also
     /// being defined in `itemData.json`.
-    #[cfg(test)]
     pub fn all_names(&self) -> Vec<&str> {
         [
             &self.ghost,
@@ -325,6 +324,11 @@ impl ItemCatalog {
     /// unknown name would hand the player a placeholder rather than fail.
     pub fn contains(&self, name: &str) -> bool {
         self.templates.contains_key(&name.to_lowercase())
+    }
+
+    /// Whether the embedded catalog failed to load or contains no entries.
+    pub fn is_empty(&self) -> bool {
+        self.templates.is_empty()
     }
 
     /// Create an inventory item from the catalog.

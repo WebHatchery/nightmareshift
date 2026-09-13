@@ -88,6 +88,7 @@ fn default_weight() -> f32 {
 // The JSON also authors an `id` label per event; nothing selects or
 // deduplicates by it, so it stays an authoring aid and is not deserialized.
 pub struct EventTemplate {
+    pub id: String,
     pub title: String,
     pub description: String,
     #[serde(default = "default_weight")]

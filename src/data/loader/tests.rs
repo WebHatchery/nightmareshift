@@ -229,3 +229,15 @@ fn stripping_preserves_the_words_and_deliberate_spacing() {
         "deliberate indentation was reformatted"
     );
 }
+
+#[test]
+fn embedded_game_data_passes_semantic_validation() {
+    let data = GameData::load().expect("structural game data should load");
+    assert!(
+        data.load_errors.is_empty(),
+        "unexpected data errors: {:?}",
+        data.load_errors
+    );
+    data.validate()
+        .expect("embedded decks should satisfy their references and balance");
+}

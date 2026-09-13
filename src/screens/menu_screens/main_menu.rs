@@ -378,7 +378,7 @@ pub fn draw_main_menu(
         // witness was stderr, which the web build has no way to show.
         let warnings = save_notice
             .into_iter()
-            .chain(data.load_errors.iter().take(3).map(String::as_str));
+            .chain(data.load_errors.iter().map(String::as_str));
         for (idx, warning) in warnings.enumerate() {
             draw_ui_text(
                 warning,

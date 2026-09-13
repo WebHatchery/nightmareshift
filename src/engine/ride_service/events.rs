@@ -160,7 +160,7 @@ impl RideService {
             state.current_passenger_need_state.clone(),
             state.current_passenger.clone(),
         ) {
-            let now = macroquad::prelude::get_time();
+            let now = state.simulation_time;
             let triggered =
                 PassengerStateMachine::apply_stress_delta(&mut need, &passenger, amount, now);
             state.current_passenger_need_state = Some(need);

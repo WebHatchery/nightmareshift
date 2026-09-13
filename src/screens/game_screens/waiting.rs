@@ -175,7 +175,7 @@ pub fn draw_waiting(
                 return UiAction::RefuelFull;
             }
 
-            let partial_amount = 25.0_f32.min(fuel_needed);
+            let partial_amount = data.constants.fuel.partial_refuel_amount.min(fuel_needed);
             let partial_cost = data.constants.fuel.refuel_cost(partial_amount, refuel_mult);
             let partial_label = data
                 .localization
