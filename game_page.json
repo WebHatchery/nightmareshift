@@ -23,7 +23,7 @@
     },
     {
       "key": "D",
-      "desc": "Decline ride offer"
+      "desc": "Decline ride offer; tap the visible Decline button"
     },
     {
       "key": "1-4",
@@ -38,8 +38,12 @@
       "desc": "Rules / inventory panels"
     },
     {
-      "key": "Mouse",
-      "desc": "Interact with UI"
+      "key": "H / L",
+      "desc": "Headlights / language in Help & Options"
+    },
+    {
+      "key": "Mouse / Touch",
+      "desc": "Use every visible button; no keyboard required"
     }
   ],
   "extra_sections": [

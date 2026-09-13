@@ -30,6 +30,7 @@ mouse or touch. Keyboard shortcuts mirror those controls when convenient.
 - **R** - rules panel. **I** - inventory.
 - **Cab controls** - E eye contact, M music, T accept tip, W window, Y wipers,
   H headlights, A air conditioning, S stop the cab.
+- **L** - cycle the language in Help & Options (English / Español).
 - **Mouse / touch** - use items, trade, buy skills and almanac levels, and
   operate every visible menu button.
 
