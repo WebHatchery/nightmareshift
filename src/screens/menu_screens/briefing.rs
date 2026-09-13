@@ -163,6 +163,9 @@ pub fn draw_briefing(
     draw_noir_city_background();
 
     if let Some(data) = game_data {
+        if screen_width() < 980.0 || screen_height() < 560.0 {
+            return draw_narrow_briefing(game_state, data, run_seed);
+        }
         let screen_w = screen_width();
         let screen_h = screen_height();
         let margin = (screen_w * 0.045).clamp(30.0, 70.0);
@@ -609,5 +612,99 @@ pub fn draw_briefing(
         }
     }
 
+    UiAction::None
+}
+
+fn draw_narrow_briefing(
+    game_state: &GameState,
+    data: &GameData,
+    run_seed: Option<u64>,
+) -> UiAction {
+    let margin = 10.0;
+    let width = screen_width() - margin * 2.0;
+    let panel = UiRect::new(margin, 10.0, width, screen_height() - 20.0);
+    draw_glass_panel(panel, colors::BORDER_DIM);
+    let inner = panel.inset(10.0);
+    draw_ui_text(
+        &data.localization.ui.briefing.title,
+        inner.x,
+        inner.y + 20.0,
+        20.0,
+        colors::CAB_YELLOW,
+    );
+    let night_label = data
+        .localization
+        .ui
+        .briefing
+        .night_label
+        .replacen("{}", &game_state.night.to_string(), 1)
+        .replacen(
+            "{}",
+            &data.constants.game_constants.nights_per_run.to_string(),
+            1,
+        );
+    draw_small_caps(
+        &night_label,
+        inner.x,
+        inner.y + 40.0,
+        fonts::SIZE_XS,
+        colors::TEXT_MUTED,
+    );
+    let rule_text = game_state
+        .current_rules
+        .first()
+        .map(|rule| format!("RULE: {} — {}", rule.title, rule.description))
+        .unwrap_or_else(|| "RULE: Watch every passenger before you act.".to_string());
+    draw_wrapped_text(
+        &rule_text,
+        inner.x,
+        inner.y + 58.0,
+        inner.w,
+        fonts::SIZE_XS,
+        11.0,
+        colors::TEXT_PRIMARY,
+        3,
+    );
+    draw_small_caps(
+        &format!(
+            "WEATHER: {} | FUEL: {:.0}% | TARGET: ${}",
+            game_state.current_weather.weather_type.name(),
+            game_state.fuel,
+            game_state.minimum_earnings
+        ),
+        inner.x,
+        inner.y + 101.0,
+        fonts::SIZE_XS,
+        colors::ACCENT_SKY,
+    );
+    if let Some(seed) = run_seed {
+        draw_small_caps(
+            &format!("SEEDED RUN: {seed}"),
+            inner.x,
+            inner.y + 118.0,
+            fonts::SIZE_XS,
+            colors::ACCENT_SKY,
+        );
+    }
+
+    let button_gap = 8.0;
+    let button_w = (inner.w - button_gap) / 2.0;
+    let button_y = panel.bottom() - 38.0;
+    if draw_glass_button(
+        UiRect::new(inner.x, button_y, button_w, 28.0),
+        &data.localization.ui.briefing.begin_space,
+        colors::CAB_YELLOW,
+        true,
+    ) {
+        return UiAction::StartGame;
+    }
+    if draw_glass_button(
+        UiRect::new(inner.x + button_w + button_gap, button_y, button_w, 28.0),
+        &data.localization.ui.common.back_button,
+        colors::TEXT_MUTED,
+        true,
+    ) {
+        return UiAction::ReturnToMenu;
+    }
     UiAction::None
 }
