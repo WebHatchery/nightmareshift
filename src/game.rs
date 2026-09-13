@@ -622,33 +622,47 @@ impl Game {
 
     /// Update game logic
     pub fn update(&mut self) {
+        let (frame_dt, dt) = self.frame_timing();
+        let current_time = self.game_state.simulation_time;
+        self.advance_loading_screen();
+        self.expire_delete_prompt();
+        self.game_state.settle_passenger_trust();
+        self.update_effects(frame_dt, dt);
+        if self.screen == Screen::Game && self.update_active_shift(dt, current_time) {
+            return;
+        }
+        self.audio.sync(
+            self.screen,
+            &mut self.game_state,
+            &self.player_stats.accessibility,
+        );
+    }
+
+    fn frame_timing(&mut self) -> (f32, f32) {
         let wall_time = get_time();
         let frame_dt = (wall_time - self.last_frame_time).clamp(0.0, 0.25) as f32;
         self.last_frame_time = wall_time;
         let simulation_active = self.screen == Screen::Game && !self.overlays.pause;
-        let dt = if !simulation_active {
-            0.0
-        } else {
+        let dt = if simulation_active {
             self.game_state.simulation_time += SIMULATION_TICK_SECONDS;
             SIMULATION_TICK_SECONDS as f32
+        } else {
+            0.0
         };
-        let current_time = self.game_state.simulation_time;
+        (frame_dt, dt)
+    }
 
-        if self.screen == Screen::Loading {
-            self.loading_frames += 1;
-            // With no data there is nothing to advance to; the loading
-            // screen holds and shows the error instead.
-            if self.loading_frames >= 2 && self.game_data.is_some() {
-                self.change_screen(Screen::MainMenu);
-            }
+    fn advance_loading_screen(&mut self) {
+        if self.screen != Screen::Loading {
+            return;
         }
+        self.loading_frames += 1;
+        if self.loading_frames >= 2 && self.game_data.is_some() {
+            self.change_screen(Screen::MainMenu);
+        }
+    }
 
-        self.expire_delete_prompt();
-        // Whatever pushed the passenger's need this frame, settle what their
-        // escalation did to the driver's standing exactly once.
-        self.game_state.settle_passenger_trust();
-
-        // Update effects
+    fn update_effects(&mut self, frame_dt: f32, dt: f32) {
         self.transition.update(frame_dt);
         if self.player_stats.accessibility.reduced_motion {
             self.screen_shake.clear();
@@ -657,140 +671,125 @@ impl Game {
             self.screen_shake.update(dt);
             self.particles.update(dt);
         }
+    }
 
-        // Spawn weather particles during game
-        if self.screen == Screen::Game {
-            use crate::data::WeatherType;
-            match self.game_state.current_weather.weather_type {
-                WeatherType::Rain | WeatherType::Thunderstorm => {
-                    if self.particles.count() < 100 {
-                        self.particles.spawn_rain(5);
-                    }
-                }
-                WeatherType::Snow => {
-                    if self.particles.count() < 80 {
-                        self.particles.spawn_snow(3);
-                    }
-                }
-                WeatherType::Fog if self.particles.count() < 30 => {
-                    self.particles.spawn_fog(1);
-                }
-                _ => {}
-            }
-
-            // Stranded: not enough left for any route out. End the night
-            // where it stands rather than leaving the player with four
-            // disabled buttons and a clock that only moves when they drive.
-            if self.game_state.game_phase == GamePhase::Driving {
-                let stranded = self
-                    .game_data
-                    .as_ref()
-                    .map(|data| {
-                        RideService::is_stranded(&self.game_state, data, &self.player_stats)
-                    })
-                    .unwrap_or(false);
-                if stranded {
-                    self.game_state.game_over_reason = Some(
-                        "You could not make the next leg. The shift ends where it stands."
-                            .to_string(),
-                    );
-                    let earned_enough =
-                        self.game_state.earnings >= self.game_state.minimum_earnings;
-                    self.end_shift(earned_enough);
-                    return;
-                }
-            }
-
-            // Update guideline decision timer.
-            //
-            // The countdown is measured against an absolute start time, so it
-            // kept running behind the pause menu — open the thirty-second
-            // decision, press ESC to think it over, and the game would make
-            // the choice for you while the menu was up. Pausing pushes the
-            // start forward instead, holding whatever is left on the clock.
-            let mut guideline_timed_out = false;
-            if self.game_state.game_phase == GamePhase::GuidelineDecision {
-                if self.overlays.pause {
-                    if let Some(start_time) = self.game_state.guideline_decision_start_time {
-                        self.game_state.guideline_decision_start_time =
-                            Some(start_time + dt as f64);
-                    }
-                } else if let Some(start_time) = self.game_state.guideline_decision_start_time {
-                    let elapsed = (current_time - start_time) as f32;
-                    self.game_state.guideline_time_remaining =
-                        (self.game_state.guideline_decision_seconds - elapsed).max(0.0);
-                    guideline_timed_out = self.game_state.guideline_time_remaining <= 0.0;
-                }
-            }
-            // Time's up: force the decision, defaulting to following the guideline.
-            if guideline_timed_out {
-                self.evaluate_guideline_decision(GuidelineAction::Follow);
-            }
-
-            // Proactive tell detection during rides
-            GuidelineEngine::update_detection(
-                &mut self.game_state,
-                &self.player_stats,
-                current_time,
-            );
-
-            // Dynamic weather updates
-            if self.game_state.shift_start_time.is_some() {
-                self.game_state.current_weather = WeatherService::update_weather(
-                    &mut self.game_state.rng,
-                    &self.game_state.current_weather,
-                    &self.game_state.season,
-                    current_time,
-                );
-
-                // The in-fiction clock advances with the shift's own
-                // minutes, which routes spend, rather than wall time.
-                let minutes_gone = self
-                    .game_data
-                    .as_ref()
-                    .map(|data| {
-                        data.constants
-                            .game_constants
-                            .initial_time
-                            .saturating_sub(self.game_state.time_remaining)
-                    })
-                    .unwrap_or(0);
-                self.game_state.time_of_day = WeatherService::time_of_day_after(minutes_gone);
-                self.sync_weather_rules();
-
-                self.game_state.environmental_hazards.retain(|hazard| {
-                    current_time - hazard.start_time < hazard.duration as f64 * 60.0
-                });
-
-                if current_time - self.last_hazard_update >= 60.0 {
-                    let new_hazards = WeatherService::generate_hazards(
-                        &mut self.game_state.rng,
-                        &self.game_state.current_weather,
-                        &self.game_state.time_of_day,
-                        &self.game_state.season,
-                        current_time,
-                    );
-                    for hazard in new_hazards {
-                        if !self
-                            .game_state
-                            .environmental_hazards
-                            .iter()
-                            .any(|h| h.id == hazard.id)
-                        {
-                            self.game_state.environmental_hazards.push(hazard);
-                        }
-                    }
-                    self.last_hazard_update = current_time;
-                }
-            }
-
-            // Update items (curses, deterioration)
-            ItemService::update_items(&mut self.game_state, current_time);
+    fn update_active_shift(&mut self, dt: f32, current_time: f64) -> bool {
+        self.spawn_weather_particles();
+        if self.end_if_stranded() {
+            return true;
         }
-        self.audio.sync(
-            self.screen,
-            &mut self.game_state,
-            &self.player_stats.accessibility,
+        self.update_guideline_timer(dt, current_time);
+        GuidelineEngine::update_detection(&mut self.game_state, &self.player_stats, current_time);
+        self.update_weather_and_hazards(current_time);
+        ItemService::update_items(&mut self.game_state, current_time);
+        false
+    }
+
+    fn spawn_weather_particles(&mut self) {
+        use crate::data::WeatherType;
+        match self.game_state.current_weather.weather_type {
+            WeatherType::Rain | WeatherType::Thunderstorm if self.particles.count() < 100 => {
+                self.particles.spawn_rain(5)
+            }
+            WeatherType::Snow if self.particles.count() < 80 => self.particles.spawn_snow(3),
+            WeatherType::Fog if self.particles.count() < 30 => self.particles.spawn_fog(1),
+            _ => {}
+        }
+    }
+
+    fn end_if_stranded(&mut self) -> bool {
+        if self.game_state.game_phase != GamePhase::Driving {
+            return false;
+        }
+        let stranded = self
+            .game_data
+            .as_ref()
+            .map(|data| RideService::is_stranded(&self.game_state, data, &self.player_stats))
+            .unwrap_or(false);
+        if !stranded {
+            return false;
+        }
+        self.game_state.game_over_reason =
+            Some("You could not make the next leg. The shift ends where it stands.".to_string());
+        let earned_enough = self.game_state.earnings >= self.game_state.minimum_earnings;
+        self.end_shift(earned_enough);
+        true
+    }
+
+    fn update_guideline_timer(&mut self, dt: f32, current_time: f64) {
+        if self.game_state.game_phase != GamePhase::GuidelineDecision {
+            return;
+        }
+        if self.overlays.pause {
+            if let Some(start_time) = self.game_state.guideline_decision_start_time {
+                self.game_state.guideline_decision_start_time = Some(start_time + dt as f64);
+            }
+            return;
+        }
+        let Some(start_time) = self.game_state.guideline_decision_start_time else {
+            return;
+        };
+        let elapsed = (current_time - start_time) as f32;
+        self.game_state.guideline_time_remaining =
+            (self.game_state.guideline_decision_seconds - elapsed).max(0.0);
+        if self.game_state.guideline_time_remaining <= 0.0 {
+            self.evaluate_guideline_decision(GuidelineAction::Follow);
+        }
+    }
+
+    fn update_weather_and_hazards(&mut self, current_time: f64) {
+        if self.game_state.shift_start_time.is_none() {
+            return;
+        }
+        self.game_state.current_weather = WeatherService::update_weather(
+            &mut self.game_state.rng,
+            &self.game_state.current_weather,
+            &self.game_state.season,
+            current_time,
         );
+        let minutes_gone = self
+            .game_data
+            .as_ref()
+            .map(|data| {
+                data.constants
+                    .game_constants
+                    .initial_time
+                    .saturating_sub(self.game_state.time_remaining)
+            })
+            .unwrap_or(0);
+        self.game_state.time_of_day = WeatherService::time_of_day_after(minutes_gone);
+        self.sync_weather_rules();
+        self.remove_expired_hazards(current_time);
+        self.generate_new_hazards(current_time);
+    }
+
+    fn remove_expired_hazards(&mut self, current_time: f64) {
+        self.game_state
+            .environmental_hazards
+            .retain(|hazard| current_time - hazard.start_time < hazard.duration as f64 * 60.0);
+    }
+
+    fn generate_new_hazards(&mut self, current_time: f64) {
+        if current_time - self.last_hazard_update < 60.0 {
+            return;
+        }
+        let new_hazards = WeatherService::generate_hazards(
+            &mut self.game_state.rng,
+            &self.game_state.current_weather,
+            &self.game_state.time_of_day,
+            &self.game_state.season,
+            current_time,
+        );
+        for hazard in new_hazards {
+            if !self
+                .game_state
+                .environmental_hazards
+                .iter()
+                .any(|existing| existing.id == hazard.id)
+            {
+                self.game_state.environmental_hazards.push(hazard);
+            }
+        }
+        self.last_hazard_update = current_time;
     }
 }
