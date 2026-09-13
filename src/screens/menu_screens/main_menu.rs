@@ -29,7 +29,7 @@ pub fn draw_main_menu(
 ) -> UiAction {
     draw_title_background();
 
-    if screen_width() < 700.0 {
+    if screen_width() < 980.0 || screen_height() < 560.0 {
         return draw_narrow_main_menu(delete_armed, save_notice, resume_available, seed_entry);
     }
 
