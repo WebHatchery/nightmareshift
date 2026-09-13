@@ -6,8 +6,8 @@ use crate::data::{GameData, Rarity};
 use crate::state::GameState;
 use crate::ui::draw_ui_text;
 use crate::ui::{
-    colors, draw_cockpit_background, draw_glass_button, draw_glass_panel, draw_wrapped_text, fonts,
-    layout, spacing, CompletionSummary, UiAction, UiRect,
+    colors, draw_cockpit_background, draw_glass_button, draw_glass_panel, draw_small_caps,
+    draw_wrapped_text, fonts, layout, spacing, CompletionSummary, UiAction, UiRect,
 };
 
 use super::scene::draw_bottom_taxi_scene;
@@ -23,6 +23,10 @@ const BUTTON_H: f32 = 40.0;
 /// Draw the dropoff screen
 pub fn draw_dropoff(game_state: &GameState, game_data: Option<&GameData>) -> UiAction {
     draw_cockpit_background();
+
+    if screen_width() < 980.0 || screen_height() < 560.0 {
+        return draw_narrow_dropoff(game_state, game_data);
+    }
 
     let scene_h = (screen_height() * 0.27).clamp(210.0, 300.0);
     let scene_rect = UiRect::new(
@@ -303,6 +307,75 @@ pub fn draw_dropoff(game_state: &GameState, game_data: Option<&GameData>) -> UiA
         } else {
             return completion_action;
         }
+    }
+    UiAction::None
+}
+
+fn draw_narrow_dropoff(game_state: &GameState, game_data: Option<&GameData>) -> UiAction {
+    let Some(completion) = game_state.last_ride_completion.as_ref() else {
+        return UiAction::None;
+    };
+    let panel = UiRect::new(
+        12.0,
+        layout::STATUS_BAR_HEIGHT + 8.0,
+        screen_width() - 24.0,
+        110.0,
+    );
+    draw_glass_panel(panel, colors::FUEL_GOOD);
+    draw_small_caps(
+        "RIDE COMPLETE",
+        panel.x + 12.0,
+        panel.y + 18.0,
+        fonts::SIZE_XS,
+        colors::FUEL_GOOD,
+    );
+    draw_ui_text(
+        &completion.passenger.name,
+        panel.x + 12.0,
+        panel.y + 43.0,
+        fonts::SIZE_LG,
+        colors::CAB_YELLOW,
+    );
+    draw_small_caps(
+        &format!(
+            "FARE +${}  |  FUEL -{}  |  TIME -{}m  |  RULES +{}",
+            completion.fare_earned,
+            completion.impact.fuel_spent,
+            completion.impact.time_spent,
+            completion.impact.rules_violated
+        ),
+        panel.x + 12.0,
+        panel.y + 66.0,
+        fonts::SIZE_XS,
+        if completion.impact.rules_violated > 0 {
+            colors::ACCENT_DANGER
+        } else {
+            colors::TEXT_SECONDARY
+        },
+    );
+    if let Some((passenger_name, offered_item)) = game_state.pending_trade.as_ref() {
+        draw_small_caps(
+            &format!("{passenger_name} offers {}", offered_item.name),
+            panel.x + 12.0,
+            panel.y + 84.0,
+            fonts::SIZE_XS,
+            colors::ACCENT_GOLD,
+        );
+    }
+    let label = game_data
+        .map(|data| data.localization.ui.common.continue_text.as_str())
+        .unwrap_or("CONTINUE");
+    if draw_glass_button(
+        UiRect::new(12.0, screen_height() - 34.0, screen_width() - 24.0, 26.0),
+        label,
+        colors::FUEL_GOOD,
+        true,
+    ) {
+        return if game_state.pending_trade.is_some() {
+            UiAction::DeclineTrade
+        } else {
+            UiAction::Continue
+        };
     }
     UiAction::None
 }

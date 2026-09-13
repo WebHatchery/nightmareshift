@@ -21,6 +21,10 @@ pub fn draw_ride_request(
 ) -> UiAction {
     draw_cockpit_background();
 
+    if screen_width() < 980.0 || screen_height() < 560.0 {
+        return draw_narrow_ride_request(game_state, game_data, player_stats);
+    }
+
     let scene_h = (screen_height() * 0.30).clamp(220.0, 320.0);
     let scene_rect = UiRect::new(
         70.0,
@@ -249,6 +253,92 @@ pub fn draw_ride_request(
         ) {
             return UiAction::DeclineRide;
         }
+    }
+    UiAction::None
+}
+
+fn draw_narrow_ride_request(
+    game_state: &GameState,
+    game_data: Option<&GameData>,
+    player_stats: &PlayerStats,
+) -> UiAction {
+    let Some(passenger) = game_state.current_passenger.as_ref() else {
+        return UiAction::None;
+    };
+    let panel = UiRect::new(
+        12.0,
+        layout::STATUS_BAR_HEIGHT + 8.0,
+        screen_width() - 24.0,
+        110.0,
+    );
+    draw_glass_panel(panel, colors::BORDER);
+    let portrait_size = 64.0_f32.min(panel.h - 38.0);
+    draw_passenger_portrait(
+        UiRect::new(panel.x + 10.0, panel.y + 10.0, portrait_size, portrait_size),
+        passenger.id,
+    );
+    let info_x = panel.x + portrait_size + 22.0;
+    draw_small_caps(
+        "RIDE REQUEST",
+        info_x,
+        panel.y + 18.0,
+        fonts::SIZE_XS,
+        colors::TEXT_MUTED,
+    );
+    draw_ui_text(
+        &passenger.name,
+        info_x,
+        panel.y + 42.0,
+        fonts::SIZE_LG,
+        colors::CAB_YELLOW,
+    );
+    let fare = game_data
+        .map(|data| {
+            let (low, high) =
+                crate::engine::RouteService::fare_range(passenger, game_state, data, player_stats);
+            if low == high {
+                format!("${low}")
+            } else {
+                format!("${low}-${high}")
+            }
+        })
+        .unwrap_or_else(|| format!("${}", passenger.fare));
+    draw_small_caps(
+        &format!("{}  |  {}", fare, passenger.pickup),
+        info_x,
+        panel.y + 60.0,
+        fonts::SIZE_XS,
+        colors::ACCENT_GOLD,
+    );
+    draw_wrapped_text(
+        &format!("to {}", passenger.destination),
+        info_x,
+        panel.y + 79.0,
+        panel.right() - info_x - 10.0,
+        fonts::SIZE_XS,
+        12.0,
+        colors::TEXT_SECONDARY,
+        1,
+    );
+
+    let gap = 8.0;
+    let button_w = (screen_width() - 24.0 - gap) / 2.0;
+    let button_y = screen_height() - 34.0;
+    if draw_glass_button(
+        UiRect::new(12.0, button_y, button_w, 26.0),
+        "ACCEPT",
+        colors::ACCENT_PRIMARY,
+        true,
+    ) {
+        return UiAction::AcceptRide;
+    }
+    if draw_glass_button(
+        UiRect::new(12.0 + button_w + gap, button_y, button_w, 26.0),
+        "DECLINE",
+        colors::ACCENT_DANGER,
+        true,
+    ) {
+        return UiAction::DeclineRide;
     }
     UiAction::None
 }

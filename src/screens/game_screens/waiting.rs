@@ -22,6 +22,10 @@ pub fn draw_waiting(
 ) -> UiAction {
     draw_cockpit_background();
 
+    if screen_width() < 980.0 || screen_height() < 560.0 {
+        return draw_narrow_waiting(game_state, game_data);
+    }
+
     let scene_h = (screen_height() * 0.28).clamp(220.0, 310.0);
     let scene_rect = UiRect::new(
         70.0,
@@ -280,4 +284,74 @@ pub fn draw_waiting(
     } else {
         UiAction::None
     }
+}
+
+fn draw_narrow_waiting(game_state: &GameState, game_data: Option<&GameData>) -> UiAction {
+    let Some(data) = game_data else {
+        return UiAction::None;
+    };
+    let panel = UiRect::new(
+        12.0,
+        layout::STATUS_BAR_HEIGHT + 8.0,
+        screen_width() - 24.0,
+        110.0,
+    );
+    draw_glass_panel(panel, colors::BORDER);
+    draw_small_caps(
+        "DISPATCH",
+        panel.x + 12.0,
+        panel.y + 20.0,
+        fonts::SIZE_XS,
+        colors::CAB_YELLOW,
+    );
+    draw_ui_text(
+        &data.localization.ui.game.waiting.looking,
+        panel.x + 12.0,
+        panel.y + 48.0,
+        fonts::SIZE_LG,
+        colors::TEXT_PRIMARY,
+    );
+    draw_small_caps(
+        &format!(
+            "FUEL {:.0}%  |  EARNINGS ${}  |  RIDES {}",
+            game_state.fuel, game_state.earnings, game_state.rides_completed
+        ),
+        panel.x + 12.0,
+        panel.y + 72.0,
+        fonts::SIZE_XS,
+        colors::TEXT_MUTED,
+    );
+
+    let button_y = screen_height() - 34.0;
+    let button_w = screen_width() - 24.0;
+    let earned_enough =
+        game_state.earnings >= game_state.minimum_earnings && !game_state.last_fare_night;
+    if earned_enough {
+        let gap = 6.0;
+        let half = (button_w - gap) / 2.0;
+        if draw_glass_button(
+            UiRect::new(12.0, button_y, half, 26.0),
+            "CASH OUT",
+            colors::FUEL_GOOD,
+            true,
+        ) {
+            return UiAction::EndShift;
+        }
+        if draw_glass_button(
+            UiRect::new(12.0 + half + gap, button_y, half, 26.0),
+            &data.localization.ui.game.waiting.find_passenger,
+            colors::CAB_YELLOW,
+            true,
+        ) {
+            return UiAction::Continue;
+        }
+    } else if draw_glass_button(
+        UiRect::new(12.0, button_y, button_w, 26.0),
+        &data.localization.ui.game.waiting.find_passenger,
+        colors::CAB_YELLOW,
+        true,
+    ) {
+        return UiAction::Continue;
+    }
+    UiAction::None
 }

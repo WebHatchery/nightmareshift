@@ -28,6 +28,10 @@ pub fn draw_guideline_decision(
 ) -> UiAction {
     draw_cockpit_background();
 
+    if screen_width() < 980.0 || screen_height() < 560.0 {
+        return draw_narrow_guideline_decision(game_state, game_data, player_stats);
+    }
+
     let scene_h = (screen_height() * 0.25).clamp(200.0, 280.0);
     let scene_rect = UiRect::new(
         70.0,
@@ -341,5 +345,102 @@ pub fn draw_guideline_decision(
         }
     }
 
+    UiAction::None
+}
+
+fn draw_narrow_guideline_decision(
+    game_state: &GameState,
+    game_data: Option<&GameData>,
+    player_stats: &crate::state::PlayerStats,
+) -> UiAction {
+    let (Some(guideline), Some(data)) = (game_state.active_guideline.as_ref(), game_data) else {
+        return UiAction::None;
+    };
+    let panel = UiRect::new(
+        12.0,
+        layout::STATUS_BAR_HEIGHT + 8.0,
+        screen_width() - 24.0,
+        110.0,
+    );
+    draw_glass_panel(panel, colors::ACCENT_WARNING);
+    draw_small_caps(
+        &data.localization.ui.game.guidelines.title,
+        panel.x + 12.0,
+        panel.y + 18.0,
+        fonts::SIZE_XS,
+        colors::ACCENT_WARNING,
+    );
+    let timer_color = if game_state.guideline_time_remaining <= 10.0 {
+        colors::FUEL_CRITICAL
+    } else {
+        colors::FUEL_GOOD
+    };
+    draw_small_caps(
+        &format!("TIME {:.1}s", game_state.guideline_time_remaining.max(0.0)),
+        panel.x + panel.w - 82.0,
+        panel.y + 18.0,
+        fonts::SIZE_XS,
+        timer_color,
+    );
+    draw_ui_text(
+        &guideline.title,
+        panel.x + 12.0,
+        panel.y + 42.0,
+        fonts::SIZE_LG,
+        colors::ACCENT_SKY,
+    );
+    let description = macroquad_toolkit::ui::truncate_text_to_width(
+        &guideline.description,
+        panel.w - 24.0,
+        fonts::SIZE_XS,
+    );
+    draw_small_caps(
+        &description,
+        panel.x + 12.0,
+        panel.y + 61.0,
+        fonts::SIZE_XS,
+        colors::TEXT_SECONDARY,
+    );
+    if let Some(tell) = game_state
+        .detected_tells
+        .iter()
+        .find(|tell| tell.related_guideline == Some(guideline.id))
+    {
+        draw_small_caps(
+            &format!("TELL: {}", tell.tell.description),
+            panel.x + 12.0,
+            panel.y + 78.0,
+            fonts::SIZE_XS,
+            colors::ACCENT_GOLD,
+        );
+    }
+
+    let gap = 8.0;
+    let button_w = (screen_width() - 24.0 - gap) / 2.0;
+    let y = screen_height() - 34.0;
+    let follow = label_with_binding(
+        &data.localization.ui.game.guidelines.follow,
+        &player_stats.accessibility.key_bindings.follow,
+    );
+    let break_rule = label_with_binding(
+        &data.localization.ui.game.guidelines.break_guideline,
+        &player_stats.accessibility.key_bindings.break_guideline,
+    );
+    if draw_glass_button(
+        UiRect::new(12.0, y, button_w, 26.0),
+        &follow,
+        colors::FUEL_GOOD,
+        true,
+    ) {
+        return UiAction::FollowGuideline;
+    }
+    if draw_glass_button(
+        UiRect::new(12.0 + button_w + gap, y, button_w, 26.0),
+        &break_rule,
+        colors::ACCENT_DANGER,
+        true,
+    ) {
+        return UiAction::BreakGuideline;
+    }
     UiAction::None
 }

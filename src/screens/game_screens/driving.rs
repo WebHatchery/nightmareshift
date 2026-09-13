@@ -20,6 +20,10 @@ pub fn draw_driving(
 ) -> UiAction {
     draw_cockpit_background();
 
+    if screen_width() < 980.0 || screen_height() < 560.0 {
+        return draw_narrow_driving(game_state, game_data);
+    }
+
     let scene_h = (screen_height() * 0.27).clamp(210.0, 300.0);
     let scene_rect = UiRect::new(
         70.0,
@@ -552,5 +556,79 @@ pub fn draw_driving(
         }
     }
 
+    UiAction::None
+}
+
+fn draw_narrow_driving(game_state: &GameState, game_data: Option<&GameData>) -> UiAction {
+    let Some(data) = game_data else {
+        return UiAction::None;
+    };
+    let panel = UiRect::new(
+        12.0,
+        layout::STATUS_BAR_HEIGHT + 8.0,
+        screen_width() - 24.0,
+        110.0,
+    );
+    draw_glass_panel(panel, colors::BORDER);
+    let phase = match game_state.driving_phase {
+        Some(DrivingPhase::Pickup) => &data.localization.ui.game.driving.pickup,
+        Some(DrivingPhase::Destination) => &data.localization.ui.game.driving.destination,
+        None => "DRIVING",
+    };
+    draw_small_caps(
+        phase,
+        panel.x + 12.0,
+        panel.y + 18.0,
+        fonts::SIZE_XS,
+        colors::CAB_YELLOW,
+    );
+    let destination = game_state
+        .current_ride
+        .as_ref()
+        .map(|ride| match game_state.driving_phase {
+            Some(DrivingPhase::Pickup) => ride.pickup_location.as_str(),
+            _ => ride.destination_location.as_str(),
+        })
+        .unwrap_or("the next road");
+    draw_ui_text(
+        &format!("TO {destination}"),
+        panel.x + 12.0,
+        panel.y + 42.0,
+        fonts::SIZE_LG,
+        colors::TEXT_PRIMARY,
+    );
+    draw_small_caps(
+        &format!("FUEL {:.0}%  |  CHOOSE A ROUTE", game_state.fuel),
+        panel.x + 12.0,
+        panel.y + 60.0,
+        fonts::SIZE_XS,
+        colors::TEXT_MUTED,
+    );
+
+    let routes = [
+        (RouteType::Normal, "NORMAL", colors::CAB_YELLOW),
+        (RouteType::Shortcut, "SHORTCUT", colors::ACCENT_WARNING),
+        (RouteType::Scenic, "SCENIC", colors::ACCENT_SKY),
+        (RouteType::Police, "POLICE", colors::FUEL_GOOD),
+    ];
+    let gap = 5.0;
+    let button_w = (screen_width() - 24.0 - gap) / 2.0;
+    let button_h = 25.0;
+    let top = screen_height() - button_h * 2.0 - gap - 10.0;
+    for (index, (route, label, color)) in routes.into_iter().enumerate() {
+        let blocked = game_state
+            .environmental_hazards
+            .iter()
+            .any(|hazard| hazard.blocks_route(route));
+        let rect = UiRect::new(
+            12.0 + (index % 2) as f32 * (button_w + gap),
+            top + (index / 2) as f32 * (button_h + gap),
+            button_w,
+            button_h,
+        );
+        if draw_glass_button(rect, label, color, !blocked) {
+            return UiAction::SelectRoute(index);
+        }
+    }
     UiAction::None
 }

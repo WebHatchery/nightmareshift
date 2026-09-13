@@ -19,6 +19,10 @@ use super::scene::draw_bottom_taxi_scene;
 pub fn draw_interaction(game_state: &GameState) -> UiAction {
     draw_cockpit_background();
 
+    if screen_width() < 980.0 || screen_height() < 560.0 {
+        return draw_narrow_interaction(game_state);
+    }
+
     let scene_h = (screen_height() * 0.27).clamp(210.0, 300.0);
     let scene_rect = UiRect::new(
         70.0,
@@ -242,6 +246,82 @@ pub fn draw_interaction(game_state: &GameState) -> UiAction {
         ) {
             return UiAction::Continue;
         }
+    }
+    UiAction::None
+}
+
+fn draw_narrow_interaction(game_state: &GameState) -> UiAction {
+    let Some(event) = game_state.current_event.as_ref() else {
+        return UiAction::Continue;
+    };
+    let panel = UiRect::new(
+        12.0,
+        layout::STATUS_BAR_HEIGHT + 8.0,
+        screen_width() - 24.0,
+        110.0,
+    );
+    draw_glass_panel(panel, colors::BORDER);
+    draw_small_caps(
+        "MID-RIDE EVENT",
+        panel.x + 12.0,
+        panel.y + 18.0,
+        fonts::SIZE_XS,
+        colors::CAB_YELLOW,
+    );
+    draw_ui_text(
+        &event.title,
+        panel.x + 12.0,
+        panel.y + 40.0,
+        fonts::SIZE_LG,
+        colors::TEXT_PRIMARY,
+    );
+    draw_wrapped_text(
+        &event.description,
+        panel.x + 12.0,
+        panel.y + 58.0,
+        panel.w - 24.0,
+        fonts::SIZE_XS,
+        11.0,
+        colors::TEXT_SECONDARY,
+        2,
+    );
+    if event.choices.is_empty() {
+        if draw_glass_button(
+            UiRect::new(12.0, screen_height() - 34.0, screen_width() - 24.0, 26.0),
+            "CONTINUE",
+            colors::CAB_YELLOW,
+            true,
+        ) {
+            return UiAction::Continue;
+        }
+        return UiAction::None;
+    }
+
+    let gap = 5.0;
+    let button_w = (screen_width() - 24.0 - gap * (event.choices.len().min(3) - 1) as f32)
+        / event.choices.len().min(3) as f32;
+    for (index, choice) in event.choices.iter().take(3).enumerate() {
+        let rect = UiRect::new(
+            12.0 + index as f32 * (button_w + gap),
+            screen_height() - 34.0,
+            button_w,
+            26.0,
+        );
+        if draw_glass_button(rect, "", colors::ACCENT_WARNING, true) {
+            return UiAction::SelectEventChoice(index);
+        }
+        let label = macroquad_toolkit::ui::truncate_text_to_width(
+            &choice.description,
+            button_w - 10.0,
+            fonts::SIZE_XS,
+        );
+        draw_small_caps(
+            &format!("{} {}", index + 1, label),
+            rect.x + 5.0,
+            rect.y + 17.0,
+            fonts::SIZE_XS,
+            colors::TEXT_PRIMARY,
+        );
     }
     UiAction::None
 }
