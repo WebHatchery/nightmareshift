@@ -23,6 +23,7 @@ pub fn draw_main_menu(
     game_data: Option<&GameData>,
     delete_armed: bool,
     save_notice: Option<&str>,
+    resume_available: bool,
     daily_seed: u64,
     seed_entry: Option<&str>,
 ) -> UiAction {
@@ -209,7 +210,9 @@ pub fn draw_main_menu(
         let menu_w = (screen_width() * 0.36).clamp(230.0, 380.0);
         let menu_h = (62.0 * menu_scale).clamp(38.0, 62.0);
         let gap = (12.0 * menu_scale).clamp(6.0, 12.0);
-        let menu_items = if Persistence::save_exists() { 8.0 } else { 7.0 };
+        let menu_items = 7.0
+            + if Persistence::save_exists() { 1.0 } else { 0.0 }
+            + if resume_available { 1.0 } else { 0.0 };
         let total_menu_h = menu_h * menu_items + gap * (menu_items - 1.0);
         let right_margin = 46.0 * menu_scale;
         let taxi_right = screen_width() * 0.36;
@@ -248,7 +251,12 @@ pub fn draw_main_menu(
         // day, or any night by number. Both re-arm the run stream the same
         // way `--seed` does, and the briefing badge names the seed.
         if draw_menu_command(
-            UiRect::new(menu_x, menu_y + (menu_h + gap), menu_w, menu_h),
+            UiRect::new(
+                menu_x,
+                menu_y + (menu_h + gap) * if resume_available { 2.0 } else { 1.0 },
+                menu_w,
+                menu_h,
+            ),
             "wheel",
             "Daily Shift",
             &format!("Night #{daily_seed} - dealt to everyone"),
@@ -258,7 +266,12 @@ pub fn draw_main_menu(
             return UiAction::StartDailyRun;
         }
         if draw_menu_command(
-            UiRect::new(menu_x, menu_y + (menu_h + gap) * 2.0, menu_w, menu_h),
+            UiRect::new(
+                menu_x,
+                menu_y + (menu_h + gap) * if resume_available { 3.0 } else { 2.0 },
+                menu_w,
+                menu_h,
+            ),
             "wheel",
             "Seeded Run",
             "Replay a night by number",
@@ -266,6 +279,20 @@ pub fn draw_main_menu(
             menu_scale,
         ) {
             return UiAction::OpenSeedEntry;
+        }
+
+        let menu_offset = if resume_available { 1.0 } else { 0.0 };
+        if resume_available
+            && draw_menu_command(
+                UiRect::new(menu_x, menu_y + menu_h + gap, menu_w, menu_h),
+                "wheel",
+                "Resume Run",
+                "Continue the saved night",
+                colors::FUEL_GOOD,
+                menu_scale,
+            )
+        {
+            return UiAction::ResumeRun;
         }
 
         let skill_btn_text = data
@@ -280,7 +307,12 @@ pub fn draw_main_menu(
             .map(|(_, detail)| detail.trim_end_matches(')').to_string())
             .unwrap_or_else(|| format!("${} Available", player_stats.bank_balance));
         if draw_menu_command(
-            UiRect::new(menu_x, menu_y + (menu_h + gap) * 3.0, menu_w, menu_h),
+            UiRect::new(
+                menu_x,
+                menu_y + (menu_h + gap) * (3.0 + menu_offset),
+                menu_w,
+                menu_h,
+            ),
             "tree",
             "Skill Tree",
             &skill_detail,
@@ -302,7 +334,12 @@ pub fn draw_main_menu(
             .map(|(_, detail)| detail.trim_end_matches(')').to_string())
             .unwrap_or_else(|| format!("{} Lore Fragments", player_stats.lore_fragments));
         if draw_menu_command(
-            UiRect::new(menu_x, menu_y + (menu_h + gap) * 4.0, menu_w, menu_h),
+            UiRect::new(
+                menu_x,
+                menu_y + (menu_h + gap) * (4.0 + menu_offset),
+                menu_w,
+                menu_h,
+            ),
             "book",
             "Almanac",
             &almanac_detail,
@@ -324,7 +361,12 @@ pub fn draw_main_menu(
             .trim()
             .to_string();
         if draw_menu_command(
-            UiRect::new(menu_x, menu_y + (menu_h + gap) * 5.0, menu_w, menu_h),
+            UiRect::new(
+                menu_x,
+                menu_y + (menu_h + gap) * (5.0 + menu_offset),
+                menu_w,
+                menu_h,
+            ),
             "trophy",
             &leaderboard_btn_text,
             "Best Runs",
@@ -335,7 +377,12 @@ pub fn draw_main_menu(
         }
 
         if draw_menu_command(
-            UiRect::new(menu_x, menu_y + (menu_h + gap) * 6.0, menu_w, menu_h),
+            UiRect::new(
+                menu_x,
+                menu_y + (menu_h + gap) * (6.0 + menu_offset),
+                menu_w,
+                menu_h,
+            ),
             "book",
             "Help & Options",
             "Controls, tutorial, accessibility",
@@ -361,7 +408,12 @@ pub fn draw_main_menu(
                 ("Delete Save", "Reset Progress", colors::ACCENT_DANGER)
             };
             if draw_menu_command(
-                UiRect::new(menu_x, menu_y + (menu_h + gap) * 7.0, menu_w, menu_h),
+                UiRect::new(
+                    menu_x,
+                    menu_y + (menu_h + gap) * (7.0 + menu_offset),
+                    menu_w,
+                    menu_h,
+                ),
                 "delete",
                 label,
                 detail,

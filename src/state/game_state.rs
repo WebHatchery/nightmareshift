@@ -17,7 +17,7 @@ use std::collections::HashMap;
 /// `change_screen` while five other places assigned `screen` directly and
 /// could leave the two disagreeing. Nothing ever read them. Navigation is
 /// `Screen`'s job; this describes the night.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum GamePhase {
     /// Before a shift has begun — boot, menus, and the meta screens.
     #[default]
@@ -34,14 +34,16 @@ pub enum GamePhase {
 }
 
 /// Driving sub-phase
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DrivingPhase {
     Pickup,
     Destination,
 }
 
 /// Need stage progression
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Serialize, Deserialize,
+)]
 pub enum NeedStage {
     #[default]
     Calm,
@@ -106,7 +108,7 @@ pub enum RelationshipLevel {
     Trusted,
 }
 /// Current ride information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurrentRide {
     pub passenger: Passenger,
     pub pickup_location: String,
@@ -117,7 +119,7 @@ pub struct CurrentRide {
 }
 
 /// Passenger need state tracking
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PassengerNeedState {
     pub level: u32,
     pub stage: NeedStage,
@@ -181,7 +183,7 @@ impl PassengerNeedState {
 }
 
 /// A detected behavioral tell
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DetectedTell {
     pub tell: PassengerTell,
     pub passenger_id: u32,
@@ -285,7 +287,7 @@ impl PassengerReputation {
 }
 
 /// Route history entry
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 
 pub struct RouteHistoryEntry {
     pub route_type: RouteType,
@@ -298,21 +300,21 @@ pub struct RouteHistoryEntry {
 }
 
 /// Consecutive route streak tracking
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RouteStreak {
     pub route_type: RouteType,
     pub count: u32,
 }
 
 /// A rule imposed for a limited number of rides.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TemporaryRuleState {
     pub rule_id: u32,
     pub rides_remaining: u32,
 }
 
 /// Guideline decision history
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 
 pub struct GuidelineDecision {
     pub guideline_id: u32,
@@ -324,14 +326,14 @@ pub struct GuidelineDecision {
 }
 
 /// Guideline action choice
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GuidelineAction {
     Follow,
     Break,
 }
 
 /// Dialogue display
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 
 pub struct CurrentDialogue {
     pub text: String,
@@ -340,7 +342,7 @@ pub struct CurrentDialogue {
 }
 
 /// The result of handing a passenger something.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TradeOutcome {
     pub text: String,
     /// Whether the item was on the passenger's `wantedItems` list — the only
@@ -349,7 +351,7 @@ pub struct TradeOutcome {
 }
 
 /// Who is speaking
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 
 pub enum DialogueSpeaker {
     Passenger,
@@ -358,7 +360,7 @@ pub enum DialogueSpeaker {
 }
 
 /// Complete game state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameState {
     /// Monotonic gameplay time. It advances in fixed simulation ticks while
     /// the shift is active, so waits between rendered frames cannot change

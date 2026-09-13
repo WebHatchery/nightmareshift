@@ -186,6 +186,18 @@ pub fn draw_help_options(stats: &PlayerStats, tutorial_active: bool) -> UiAction
             format!("{}%", settings.effects_volume),
             UiAction::CycleEffectsVolume,
         ),
+        (
+            "X",
+            "Export backup",
+            "Keep a restore copy".to_string(),
+            UiAction::ExportSave,
+        ),
+        (
+            "M",
+            "Import backup",
+            "Restore exported copy".to_string(),
+            UiAction::ImportSave,
+        ),
     ];
     let columns = if options.w >= 620.0 { 2 } else { 1 };
     let row_gap = 10.0;

@@ -19,6 +19,9 @@ pub use primitives::*;
 pub enum UiAction {
     None,
     StartGame,
+    ResumeRun,
+    ExportSave,
+    ImportSave,
     AcceptRide,
     DeclineRide,
     SelectRoute(usize),

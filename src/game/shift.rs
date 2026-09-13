@@ -29,6 +29,7 @@ fn minutes_on_the_clock(initial_time: u32, time_remaining: u32) -> u32 {
 impl Game {
     /// Start a new run from night 1.
     pub fn start_game(&mut self) {
+        self.resume_available = false;
         self.game_state.night = 1;
         self.game_state.run_complete = false;
         // A fixed seed re-arms at every run start, so retrying a seeded run
@@ -504,6 +505,7 @@ impl Game {
         }
 
         // Auto-save after shift
+        self.resume_available = false;
         self.save_stats();
     }
 

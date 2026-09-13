@@ -57,6 +57,7 @@ impl Game {
                 self.game_data.as_ref(),
                 self.delete_armed_until.is_some(),
                 self.save_notice.as_deref(),
+                self.resume_available,
                 Self::daily_seed(),
                 self.seed_entry.as_deref(),
             ),

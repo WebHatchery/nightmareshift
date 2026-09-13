@@ -99,6 +99,9 @@ pub struct Game {
     menu_seed: Option<u64>,
     /// The seed-entry modal's in-progress digits, when it is open.
     seed_entry: Option<String>,
+    /// A checkpoint exists in the durable save and can be resumed from the
+    /// main menu.
+    resume_available: bool,
     /// Where Help & Options returns: the menu, or a still-paused shift.
     help_return_screen: Screen,
     tutorial_active: bool,
@@ -150,7 +153,8 @@ impl Game {
 
         // Try to load saved player stats; an unreadable save is set aside
         // rather than left in place for the next auto-save to destroy.
-        let (mut player_stats, save_notice, save_allowed) = Persistence::load_or_quarantine();
+        let (mut player_stats, save_notice, save_allowed, saved_run) =
+            Persistence::load_or_quarantine();
         player_stats.init_achievements();
         let playtest_bot = PlaytestBot::from_launch_args();
         if let Some(bot) = &playtest_bot {
@@ -171,7 +175,8 @@ impl Game {
             .as_ref()
             .map(|data| data.constants.game_constants.clone())
             .unwrap_or_default();
-        let game_state = GameState::new(0.0, &constants);
+        let resume_available = saved_run.is_some();
+        let game_state = saved_run.unwrap_or_else(|| GameState::new(0.0, &constants));
         let audio = AudioMixer::load().await;
         crate::ui::prewarm_ui_glyphs();
         // Asking the browser to *exit* fullscreen during startup throws when
@@ -205,6 +210,7 @@ impl Game {
             data_error,
             save_notice,
             save_blocked: !save_allowed,
+            resume_available,
             run_seed: seed_from_launch(),
             menu_seed: None,
             seed_entry: None,
@@ -249,13 +255,36 @@ impl Game {
         if let Some(data) = &self.game_data {
             eprintln!("{}", data.localization.system.saving);
         }
-        if let Err(e) = Persistence::save(&self.player_stats) {
+        let result = if self.resume_available {
+            Persistence::save_run(&self.player_stats, &self.game_state)
+        } else {
+            Persistence::save(&self.player_stats)
+        };
+        if let Err(e) = result {
             self.save_notice = Some(format!("Could not save progress: {e}"));
             if let Some(data) = &self.game_data {
                 eprintln!("{}: {}", data.localization.system.error, e);
             } else {
                 eprintln!("Failed to save: {}", e);
             }
+        }
+    }
+
+    /// Checkpoint a paused shift without advancing its simulation clock.
+    fn save_run_checkpoint(&mut self) {
+        if self.capture_mode || self.save_blocked {
+            return;
+        }
+        if self
+            .playtest_bot
+            .as_ref()
+            .is_some_and(|bot| bot.wants_fresh_stats())
+        {
+            return;
+        }
+        match Persistence::save_run(&self.player_stats, &self.game_state) {
+            Ok(()) => self.resume_available = true,
+            Err(error) => self.save_notice = Some(format!("Could not save run: {error}")),
         }
     }
 
@@ -457,6 +486,7 @@ impl Game {
                         self.player_stats.init_achievements();
                         self.save_notice = None;
                         self.save_blocked = false;
+                        self.resume_available = false;
                     }
                     Err(error) => {
                         self.save_notice = Some(format!("Could not delete the save: {error}"));

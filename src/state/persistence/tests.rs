@@ -45,3 +45,43 @@ fn both_targets_have_a_save_path() {
         );
     }
 }
+
+#[test]
+fn version_one_save_migrates_without_inventing_a_run() {
+    let player_stats = crate::state::PlayerStats::new();
+    let value = serde_json::json!({
+        "version": 1,
+        "player_stats": player_stats,
+    });
+    let save: super::SaveData = serde_json::from_value(value).expect("legacy save fixture");
+
+    assert_eq!(save.version, 1);
+    assert!(save.run.is_none());
+    assert!(super::SaveData::VERSION > save.version);
+}
+
+#[test]
+fn run_checkpoint_round_trip_keeps_rng_and_simulation_time() {
+    let mut state = crate::state::GameState::new(12.5, &crate::data::GameConstants::default());
+    let _ = state.rng.next_u64();
+    state.guideline_time_remaining = 7.0;
+    let save = super::SaveData::with_run(crate::state::PlayerStats::new(), &state);
+    let encoded = serde_json::to_string(&save).expect("checkpoint serializes");
+    let decoded: super::SaveData = serde_json::from_str(&encoded).expect("checkpoint loads");
+    let restored = decoded.run.expect("checkpoint has a run").game_state;
+
+    assert_eq!(restored.simulation_time, state.simulation_time);
+    assert_eq!(restored.rng.state(), state.rng.state());
+    assert_eq!(restored.guideline_time_remaining, 7.0);
+}
+
+#[test]
+fn newer_save_versions_are_rejected_before_loading() {
+    let save = super::SaveData {
+        version: super::SaveData::VERSION + 1,
+        player_stats: crate::state::PlayerStats::new(),
+        run: None,
+    };
+
+    assert!(super::Persistence::validate_version(&save).is_err());
+}

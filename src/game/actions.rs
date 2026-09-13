@@ -139,6 +139,12 @@ impl Game {
                     || self.screen == Screen::Briefing
                     || (self.screen == Screen::Game && self.overlays.pause)
                 {
+                    if self.screen == Screen::Game && self.overlays.pause {
+                        // Abandoning from a pause menu deliberately discards
+                        // the checkpoint and writes only meta-progression.
+                        self.resume_available = false;
+                        self.save_stats();
+                    }
                     // All of them, not just the pause menu: an open binder
                     // used to trail the player to the menu and reappear
                     // over the next shift.
@@ -205,9 +211,46 @@ impl Game {
                     if self.overlays.pause {
                         self.overlays.rules = false;
                         self.overlays.inventory = false;
+                        self.save_run_checkpoint();
                     }
                 }
             }
+            UiAction::ResumeRun => {
+                if self.screen == Screen::MainMenu && self.resume_available {
+                    self.screen = Screen::Game;
+                    self.overlays.close_all();
+                }
+            }
+            UiAction::ExportSave => {
+                let checkpoint = self.resume_available.then_some(&self.game_state);
+                match Persistence::export_save(&self.player_stats, checkpoint) {
+                    Ok(()) => {
+                        self.save_notice = Some("Save backup exported successfully.".to_string())
+                    }
+                    Err(error) => {
+                        self.save_notice = Some(format!("Could not export save: {error}"))
+                    }
+                }
+            }
+            UiAction::ImportSave => match Persistence::import_save() {
+                Ok(save_data) => {
+                    self.player_stats = save_data.player_stats;
+                    self.player_stats.init_achievements();
+                    self.game_state =
+                        save_data.run.map(|run| run.game_state).unwrap_or_else(|| {
+                            let constants = self
+                                .game_data
+                                .as_ref()
+                                .map(|data| data.constants.game_constants.clone())
+                                .unwrap_or_default();
+                            GameState::new(self.game_state.simulation_time, &constants)
+                        });
+                    self.resume_available = self.game_state.game_phase != GamePhase::Loading;
+                    self.save_notice = Some("Save backup imported successfully.".to_string());
+                    self.save_stats();
+                }
+                Err(error) => self.save_notice = Some(format!("Could not import save: {error}")),
+            },
             UiAction::UseItem(idx) => {
                 if self.screen == Screen::Game && idx < self.game_state.inventory.len() {
                     self.use_item(idx);
