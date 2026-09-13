@@ -35,6 +35,20 @@ impl Game {
             return;
         }
 
+        if action_key == "drive_dark" && !self.game_state.headlights_on {
+            self.game_state.headlights_on = true;
+            self.game_state.current_dialogue = Some(CurrentDialogue {
+                text: "The headlights come back on. The road gives up its nearest shapes."
+                    .to_string(),
+                speaker: DialogueSpeaker::Driver,
+                timestamp: self.game_state.simulation_time,
+            });
+            return;
+        }
+        if action_key == "drive_dark" {
+            self.game_state.headlights_on = false;
+        }
+
         let current_time = self.game_state.simulation_time;
         let visible = GameEngine::check_rule_violation(
             &self.game_state.current_rules,

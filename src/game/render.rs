@@ -3,7 +3,8 @@ use macroquad::prelude::*;
 use super::Game;
 use crate::data::WeatherType;
 use crate::engine::{
-    draw_danger_overlay, draw_fog_overlay, draw_glitch_effect, draw_tension_vignette, Overlay,
+    draw_danger_overlay, draw_fog_overlay, draw_glitch_effect, draw_route_darkness,
+    draw_tension_vignette, Overlay,
 };
 use crate::screens::{game_screens, menu_screens, meta_screens, Screen};
 use crate::ui::StatusBar;
@@ -43,6 +44,19 @@ impl Game {
 
     fn draw_frame(&mut self) -> UiAction {
         clear_background(Color::from_hex(0x1a1a2e));
+
+        let driving_location =
+            self.game_state
+                .current_ride
+                .as_ref()
+                .map(|ride| match self.game_state.driving_phase {
+                    Some(crate::state::DrivingPhase::Pickup) => ride.pickup_location.as_str(),
+                    Some(crate::state::DrivingPhase::Destination) => {
+                        ride.destination_location.as_str()
+                    }
+                    None => ride.destination_location.as_str(),
+                });
+        set_active_driving_backdrop(DrivingBackdrop::for_location(driving_location));
 
         if let Some(scene) = self.ui_capture_scene.as_deref() {
             return draw_component_gallery(scene, &self.game_state, self.game_data.as_ref());
@@ -116,6 +130,7 @@ impl Game {
         self.particles.draw();
 
         if self.screen == Screen::Game {
+            draw_route_darkness(&self.game_state);
             if self.game_state.current_weather.weather_type == WeatherType::Fog {
                 draw_fog_overlay(0.12);
             }

@@ -7,7 +7,7 @@ use crate::state::{Persistence, PlayerStats};
 use crate::ui::draw_ui_text;
 use crate::ui::{
     colors, draw_glass_panel, draw_modal_scrim, draw_small_caps, draw_title_background,
-    draw_wrapped_text, fonts, UiAction, UiRect,
+    draw_ui_logo, draw_wrapped_text, fonts, UiAction, UiRect,
 };
 
 use super::widgets::draw_menu_command;
@@ -48,9 +48,15 @@ pub fn draw_main_menu(
     let title_size = (72.0 * menu_scale).clamp(32.0, 72.0);
     let title_gap = title_size * 0.92;
     let mut title_y = (112.0 * menu_scale).clamp(50.0, 122.0);
-    for line in title_text.split_whitespace() {
-        draw_ui_text(line, title_x, title_y, title_size, colors::TEXT_PRIMARY);
-        title_y += title_gap;
+    if screen_width() >= 700.0 {
+        let logo_w = (screen_width() * 0.30).clamp(260.0, 480.0);
+        draw_ui_logo(Rect::new(title_x, title_y - 48.0, logo_w, logo_w * 0.43));
+        title_y += logo_w * 0.43;
+    } else {
+        for line in title_text.split_whitespace() {
+            draw_ui_text(line, title_x, title_y, title_size, colors::TEXT_PRIMARY);
+            title_y += title_gap;
+        }
     }
     draw_small_caps(
         subtitle_text,

@@ -603,6 +603,10 @@ pub fn draw_noir_city_background() {
 pub fn draw_cockpit_background() {
     let w = screen_width();
     let h = screen_height();
+    if crate::ui::backgrounds::draw_active_driving_background() {
+        draw_rectangle(0.0, 0.0, w, h, Color::new(0.0, 0.0, 0.0, 0.30));
+        return;
+    }
     COCKPIT_BACKGROUND.with(|cached| {
         let mut cached = cached.borrow_mut();
         if cached.is_none() {

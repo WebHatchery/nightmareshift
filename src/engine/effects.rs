@@ -5,7 +5,67 @@ use macroquad_toolkit::fx::{Particle, ParticleSystem};
 use macroquad_toolkit::math::{pulse01, pulse_range};
 use macroquad_toolkit::rng;
 
+use crate::data::WeatherType;
+use crate::state::GameState;
+
 pub use macroquad_toolkit::fx::{ScreenFade, ScreenShake};
+
+/// Paint the lower windshield with the consequence of driving without a beam.
+/// The status bar and decision cards stay clear; only the road ahead changes.
+pub fn draw_route_darkness(state: &GameState) {
+    if !matches!(
+        state.game_phase,
+        crate::state::GamePhase::Driving
+            | crate::state::GamePhase::Interaction
+            | crate::state::GamePhase::GuidelineDecision
+    ) || state.time_of_day.ambient_light >= 30
+    {
+        return;
+    }
+
+    let width = screen_width();
+    let height = screen_height();
+    let road_top = height * 0.54;
+    let route = state.current_ride.as_ref().and_then(|ride| ride.route_type);
+    let fog = state.current_weather.weather_type == WeatherType::Fog;
+    if state.headlights_on {
+        let beam = Color::new(0.95, 0.72, 0.30, if fog { 0.10 } else { 0.07 });
+        draw_triangle(
+            vec2(width * 0.34, height),
+            vec2(width * 0.47, road_top),
+            vec2(width * 0.50, road_top),
+            beam,
+        );
+        draw_triangle(
+            vec2(width * 0.66, height),
+            vec2(width * 0.50, road_top),
+            vec2(width * 0.53, road_top),
+            beam,
+        );
+    } else {
+        let route_weight = match route {
+            Some(crate::data::RouteType::Scenic) => 0.48,
+            Some(crate::data::RouteType::Shortcut) => 0.43,
+            Some(crate::data::RouteType::Police) => 0.34,
+            _ => 0.38,
+        };
+        let darkness = if fog {
+            route_weight + 0.10
+        } else {
+            route_weight
+        };
+        draw_rectangle(
+            0.0,
+            road_top,
+            width,
+            height - road_top,
+            Color::new(0.0, 0.0, 0.0, darkness),
+        );
+        let edge = Color::new(0.64, 0.10, 0.08, 0.25);
+        draw_line(width * 0.47, road_top, width * 0.26, height, 2.0, edge);
+        draw_line(width * 0.53, road_top, width * 0.74, height, 2.0, edge);
+    }
+}
 
 /// Ambient weather particle emitters (rain/snow/fog) built on the shared
 /// pooled `macroquad_toolkit::fx::ParticleSystem`. Spawn-rate and appearance

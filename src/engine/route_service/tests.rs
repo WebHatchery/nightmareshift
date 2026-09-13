@@ -1,4 +1,7 @@
-use crate::data::loader::load_constants;
+use crate::data::loader::{load_constants, GameData};
+use crate::data::RouteType;
+use crate::engine::{RouteService, WeatherService};
+use crate::state::{GameState, PlayerStats};
 
 /// The soft warning must land far enough ahead of the hard one to be
 /// worth acting on, and both must clear the cost of a single route —
@@ -27,4 +30,24 @@ fn the_shift_end_warning_leaves_room_to_act() {
         timing.shift_end_warning_threshold,
         cheapest_route
     );
+}
+
+/// Headlights trade a little fuel for a safer nighttime leg, and turning them
+/// off must be visible in the same quote the route selector will charge.
+#[test]
+fn nighttime_headlights_change_the_route_quote() {
+    let data = GameData::load().expect("embedded game data should load");
+    let mut state = GameState::new(0.0, &data.constants.game_constants);
+    state.time_of_day = WeatherService::get_time_of_day(22);
+    let stats = PlayerStats::default();
+
+    let lit = RouteService::quote_route(RouteType::Normal, &state, &data, &stats);
+    state.headlights_on = false;
+    let dark = RouteService::quote_route(RouteType::Normal, &state, &data, &stats);
+
+    assert!(
+        dark.fuel < lit.fuel,
+        "dark route should avoid headlight load"
+    );
+    assert!(dark.risk > lit.risk, "dark route should expose more risk");
 }

@@ -63,6 +63,7 @@ impl RouteService {
             &crate::engine::SkillModifiers::from_unlocked(&data.skills, &stats.unlocked_skills),
         );
         Self::apply_location_modifiers(&mut costs, state, data);
+        Self::apply_headlight_modifier(&mut costs, state);
         costs
     }
 
@@ -316,6 +317,18 @@ impl RouteService {
                 .map(|location| location.destination_risk)
                 .unwrap_or(0.0))
         .round() as u32;
+    }
+
+    fn apply_headlight_modifier(costs: &mut RouteCosts, state: &GameState) {
+        if state.time_of_day.ambient_light >= 30 || state.headlights_on {
+            return;
+        }
+        // Driving dark saves the electrical load but makes the road itself
+        // more dangerous. The base calculator still owns the ordinary
+        // nighttime headlight cost; this inverse keeps quotes and transit
+        // consistent when the player deliberately turns the beam off.
+        costs.fuel = (costs.fuel as f32 / 1.1).round() as u32;
+        costs.risk = costs.risk.saturating_add(1);
     }
 
     /// Generate 3 risk tags for a route context.

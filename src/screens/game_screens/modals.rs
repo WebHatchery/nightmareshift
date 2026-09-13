@@ -6,7 +6,7 @@ use crate::data::{self, GameData, Rarity};
 use crate::state::GameState;
 use crate::ui::draw_ui_text;
 use crate::ui::{
-    colors, draw_glass_button, draw_glass_panel, draw_modal_scrim, draw_small_caps,
+    colors, draw_glass_button, draw_glass_panel, draw_item_art, draw_modal_scrim, draw_small_caps,
     draw_wrapped_text, fonts, spacing, UiAction, UiRect,
 };
 
@@ -85,6 +85,7 @@ pub fn draw_inventory_modal(game_state: &GameState, game_data: Option<&GameData>
                 };
                 draw_rectangle(inner.x, y - 5.0, inner.w, row_h, item_bg);
                 draw_rectangle_lines(inner.x, y - 5.0, inner.w, row_h, 1.0, colors::BORDER_DIM);
+                draw_item_art(UiRect::new(inner.x + 8.0, y + 8.0, 54.0, 54.0), &item.name);
 
                 // Rarity color
                 let rarity_color = match item.rarity {
@@ -97,7 +98,7 @@ pub fn draw_inventory_modal(game_state: &GameState, game_data: Option<&GameData>
                 // Item name
                 draw_ui_text(
                     &item.name,
-                    inner.x + 10.0,
+                    inner.x + 74.0,
                     y + 15.0,
                     fonts::SIZE_MD,
                     rarity_color,
@@ -107,7 +108,7 @@ pub fn draw_inventory_modal(game_state: &GameState, game_data: Option<&GameData>
                 let rarity_text = format!("{:?}", item.rarity);
                 draw_ui_text(
                     &rarity_text,
-                    inner.x + 10.0,
+                    inner.x + 74.0,
                     y + 35.0,
                     fonts::SIZE_XS,
                     colors::TEXT_MUTED,
@@ -165,7 +166,7 @@ pub fn draw_inventory_modal(game_state: &GameState, game_data: Option<&GameData>
                         .unwrap_or("Cannot be given away");
                     draw_ui_text(
                         &format!("Cursed - {} | {}", penalty, way_out),
-                        inner.x + 10.0,
+                        inner.x + 74.0,
                         y + 55.0,
                         fonts::SIZE_XS,
                         if curse.can_be_removed {
@@ -185,9 +186,9 @@ pub fn draw_inventory_modal(game_state: &GameState, game_data: Option<&GameData>
                 if !item.description.is_empty() {
                     draw_wrapped_text(
                         &item.description,
-                        inner.x + 10.0,
+                        inner.x + 74.0,
                         y + 75.0,
-                        inner.w - 20.0,
+                        inner.w - 84.0,
                         fonts::SIZE_XS,
                         14.0,
                         colors::TEXT_SECONDARY,
@@ -312,6 +313,11 @@ pub fn draw_rules_panel(game_state: &GameState, game_data: Option<&GameData>) ->
                 btn_w,
                 btn_h,
             );
+            let label = if *action_key == "drive_dark" && !game_state.headlights_on {
+                "Headlights On"
+            } else {
+                label
+            };
             let text = format!("[{}] {}", key, label);
             if draw_glass_button(rect, &text, colors::BORDER, *enabled) {
                 return UiAction::PerformRuleAction((*action_key).to_string());

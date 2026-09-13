@@ -4,6 +4,7 @@ pub mod backgrounds;
 pub mod components;
 pub mod core;
 mod gallery;
+pub mod item_art;
 mod prewarm;
 mod primitives;
 
@@ -11,6 +12,7 @@ pub use backgrounds::*;
 pub use components::*;
 pub use core::*;
 pub use gallery::*;
+pub use item_art::*;
 pub use prewarm::*;
 pub use primitives::*;
 
